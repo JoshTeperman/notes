@@ -158,9 +158,46 @@ const Input = styled.input.attrs(({ type, size }) => ({
 })
 
 //! THEMES
+// Export a <ThemeProvider /> wrapper component that provides a theme to all React components underneath itself via the context API. In the render tree all styled-components will have acess to the provided theme, even when they are multiple levels deep.
+
+// Example: create a Button component and pass some variables down as a theme:
 import styled, { ThemeProvider } from 'styled-components'
 import theme from 'styled-theming'
-// 
+
+const Button = styled.button`
+  font-size: 1em;
+  margin: 1em;
+  padding: 0.25em 1em;
+  border-radius: 3px;
+  color: ${props => props.theme.main};
+  border: 2px solid ${props => props.theme.main}
+`
+// pass a default theme for Buttons that aren't wrapped in the ThemeProvider
+Button.defaultProps = {
+  theme: {
+    main: 'palevioletred'
+  }
+}
+
+// define the theme
+const theme = {
+  main: 'mediumseagreen'
+}
+
+render(
+  <div>
+    <Button>Normal: palevioletred</Button>
+    <ThemeProvider theme={theme}>
+      <Button>Themed Button: mediumseagreen</Button>
+      // ThemeProvider returns its children when rendering, so must only wrap a single child node
+    </ThemeProvider>
+  </div>
+)
+
+// Example:
+
+import styled, { ThemeProvider } from 'styled-components'
+import theme from 'styled-theming'
 
 const boxBackgroundColor = theme('mode', {
   light: '#fff',
@@ -178,6 +215,43 @@ export default App = () => {
   )
 }
 
+// Function Themes
+// Make themese contextual
+// Pass in a function for the theme prop. This function receives the parent theme from another <ThemeProvider /> higher up the tree.
+
+const Button = styled.button`
+  color: ${props => props.theme.fg};
+  border: 2px solid ${props => props.theme.fg};
+  background: ${props => props.theme.bg};
+
+  font-size: 1em;
+  margin: 1em;
+  padding: 0.25em 1em;
+  border-radius: 3px;
+`;
+
+const theme = {
+  fg: 'palevioletred',
+  bg: 'white'
+}
+
+const invertTheme = ({ fg, bg }) => ({
+  fg: bg,
+  bg: fg
+})
+
+render(
+  <ThemeProvider theme={theme}>
+    <div>
+      <Button>Default Theme</Button>
+      <ThemeProvider theme={invertTheme}>
+        <Button>InvertedTheme</Button>
+      </ThemeProvider>
+    </div>
+  </ThemeProvider>
+)
+
+// <ThemeConsumer />
 import { ThemeConsumer } from 'styled-components'
 // This is the 'consumer' component created by react.createContext as the companion component to `ThemeProvider`.
 // It uses the `render prop pattern` to allow for dynamic access to the theme during rendering.
@@ -191,6 +265,58 @@ render() {
   )
 }
 // note: all styled components automatically receive the theme as a prop, so this is only necessary if you wish to access the theme for other reasons.
+
+//! getting the theme without styled components 1) withTheme HOC:
+import { withTheme } from 'styled-components'
+
+class MyComponent extends React.Component {
+  render() {
+    console.log('Current theme: ' this.props.theme);
+    // ..
+  }
+}
+export default withTheme(MyComponent);
+
+//! getting the theme without styled components 2) with useContext React hook:
+import { useContext } from 'react';
+import { ThemeContext } from 'styled-components'
+
+const MyComponent = () => {
+  const themeContext = useContext(ThemeContext);
+
+  console.log('Current theme: ', themeContext);
+  // ..
+}
+
+//! getting the theme without styled components 3) using theme as a prop:
+// this is very useful when overriding or circumventing a ThemeProvider
+
+const Button = styled.button`
+  font-size: 1em;
+  margin: 1em;
+  padding: 0.25em 1em;
+  border-radius: 3px;
+
+  /* color the border and text with theme.main */
+  color: ${props => props.theme.main};
+  border: 2px solid ${props => props.theme.main};
+`;
+
+const theme = {
+  main: 'mediumseagreen'
+};
+
+render(
+  <div>
+    <Button theme={{ main: 'royalblue' }}>Ad hoc theme circumventing ThemeProvider</Button>
+    <ThemeProvider theme={theme}>
+      <div>
+        <Button>Themed with main theme</Button>
+        <Button theme={{ main: 'darkorange' }}>Overriding main theme</Button>
+      </div>
+    </ThemeProvider>
+  </div>
+)
 
 
 //! HELPERS: GLOBAL STYLES createGlobalStyle``
