@@ -187,3 +187,4 @@ author: me
 
 Hello World
 ```
+New pages go in `pages/*.mdx`
