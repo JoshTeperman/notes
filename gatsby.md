@@ -171,8 +171,6 @@ plugins: [
 ]
 ```
 
-
-
 ```
 // posts/00-blog-title/00-blog-title.mdx
 ---
@@ -187,4 +185,105 @@ author: me
 
 Hello World
 ```
-New pages go in `pages/*.mdx`
+New pages go in `pages/*.mdx` 
+
+
+## gatsby-node.js
+
+Has access to actions, graphql, reporter in props. Actions provides createPage function used to create new pages. 
+
+Configure path, component, and optional context (used to pass additional data to be used in the page and available as props or as GraphQl variable). Recommendation is to pass the slug through context, and use that to make a separate graphql query to fetch additional data within page component. 
+
+```
+exports.createPages = async ({ actions, graphql, reporter }) => {
+  const result = await graphql(`
+    query {
+      allMdx {
+        nodes {
+          frontmatter {
+            slug
+          }
+        }
+      }
+    }
+  `);
+
+  if (result.errors) {
+    reporter.panic('failed to create posts', result.errors);
+  }
+
+  const posts = result.data.allMdx.nodes;
+
+  posts.forEach(post => {
+    actions.createPage({
+      path: post.frontmatter.slug,
+      component: require.resolve('./src/templates/post.js'),
+      context: {
+        slug: `/${post.frontmatter.slug}/`,
+      },
+    });
+  });
+};
+
+```
+
+## Query your posts
+
+```
+// filter by slug and retrieve a single mdx file
+// anything returned from graphql query will be accessible ({ data })
+// templates/post.js
+
+export const query = graphql`
+  query($slug: String) {
+    mdx(frontmatter: { slug: { eq: $slug }}) {
+      frontmatter {
+        title
+        author
+      }
+      body
+    }
+  }
+`;
+
+// to render body, use MDX renderer, otherwise destructure from the data object:
+
+import { MDXRenderer } from 'gatsby-plugin-mdx';
+
+const PostTemplate = ({ data: { mdx: post } }) => (
+  <Layout>
+    <h1>{post.frontmatter.title}</h1>
+    <p
+      css={css`
+        font-size: 0.75rem;
+      `}
+    >
+      Posted by {post.frontmatter.author}
+    </p>
+    <MDXRenderer>{post.body}</MDXRenderer>
+    <ReadLink to="/">&larr; Back to all posts</ReadLink>
+  </Layout>
+);
+
+
+```
+
+```
+// filter all files to find the files with source name "posts"
+// this refers to name: "posts" in gatsby-config.js
+// to source multiple differene filesystems, simply duplicate the resolve with different name/path value.
+
+query {
+  allFile(filter: { sourceInstanceName: {eq: "posts"}}) {
+    nodes {
+      childMdx {
+        frontmatter {
+          title
+          author
+        }
+        body
+      }
+    }
+  }
+}
+```
