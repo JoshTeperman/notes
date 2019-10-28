@@ -57,6 +57,11 @@ ReactDOM.render(
 # yield appears to overwrite content_for content within named yield elements, therefore if content_for named yield elements are first they will not appear on the DOM. Putting them after the main yield allow them to be displayed.
 # when rendering with document.body.appendChild, the elements will be added to the DOM in order (compared to other named yields)
 
+simplest_structure:
+controller.rb -> controller_index.html.erb -> <%= javascript_pack_tag 'index' %>
+index.js -> { ReactDOM.render(<App.js>, document.querySelector('#root')) }
+App.js -> const App = () => { <Component /> }
+
 // WEBPACKER_REACT:
 # https://github.com/renchap/webpacker-react
 
