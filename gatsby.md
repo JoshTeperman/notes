@@ -101,6 +101,22 @@ const useSiteMetadata = () => {
 export default useSiteMetadata;
 ```
 
+### Source multiple files / photos in the same query using aliases:
+
+```
+query {
+  nicole:file:(relativePath: { regex: "/nicole/"}) {
+    relativePath
+  }
+  jack:file(relativePath: { regex: "/jack/"}){
+    relativePath
+  }
+}
+
+// -> will return { data: { nicole : { relativePath }, jack: { relativePath }}}
+
+// If you don't alias these graphQL will error "Fields \"file\" conflict because they have differing arguments. Use different aliases on the fields to fetch both if this was intentional."
+```
 ## MDX
 
 ### Configuration
@@ -550,6 +566,7 @@ export const GatsbyImageSharpFluid_withWebp = graphql`
 ```
 
 # Source Plugins
+-> data will update every time your site builds. If you want to make sure you have the latest data you can use something like Zapier or webhooks to trigger a site rebuild when fresh data becomes available (ie: new post is uploaded etc)
 
 ## Instagram
 
