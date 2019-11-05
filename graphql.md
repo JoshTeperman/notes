@@ -3,7 +3,7 @@
   - Defining your schema
 - Root types
   - Root types are the entry points for queries, mutations, subscriptions
-- 
+-
 
 ## Structure
 ```
@@ -19,7 +19,7 @@ objects (or types)
 mutations
   -- base_mutation.rb         -> extends GraphQL::Schema::Mutation
   -- login_mutation.rb        -> extends BaseMutation
-enums 
+enums
   -- base_enum.rb             -> extends GraphQL::Schema::Enum
   -- user_type_enum.rb
   -- payment_method_enum.rb
@@ -29,7 +29,7 @@ input_objects
   -- authentication_input_object.rb
   -- sort_input_object.rb
 errors
-  -- base_error_object.rb           -> extends GraphQL::ExecutionError 
+  -- base_error_object.rb           -> extends GraphQL::ExecutionError
   -- unauthorized_error_object.rb   -> extends BaseErrorObject
   -- invalid_error_object.rb        -> extends BaseErrorObject
   -- constants.rb
@@ -69,7 +69,7 @@ class GraphqlController < ActionController::Base
     when String
       if ambiguous_param.present?
        ensure_hash(JSON.parse(ambiguous_param))
-      else 
+      else
         {}
       end
     when Hash, ActionController::Parameters
@@ -86,6 +86,7 @@ end
 ### Schema
 ```
 // schema.rb
+// defines the entry point for queries and mutations
 
 class <AppName>Schema < GraphQL::Schema
   mutation(Objects::RootMutationObject)
@@ -106,7 +107,7 @@ end
 ```
 // root_query_object.rb
 
-module Objects 
+module Objects
   class RootQueryObject < BaseObject
     description 'These fields serves all the data used by this App'
 
@@ -159,7 +160,7 @@ module Objects
     field :reset_password, mutation: Mutations::ResetPasswordMutation
     field :weployee, WeployeeMutationObject, 'Actions for Weployees', null: false
 
-    def admin 
+    def admin
       user = context.fetch(:user)
       return user if user.class == AdminUser
 
@@ -206,7 +207,7 @@ module Mutations
 
     argument :email, String, 'The email used for login', required: true, prepare: ->(value, _ctx) { value.downcase }
     argument :password, String, 'The password used for login', required: true
-    argument :user_type, Enums::UserTypeEnum, 'The role of the user logging in', required: true  
+    argument :user_type, Enums::UserTypeEnum, 'The role of the user logging in', required: true
     argument :authentication_type, Enums::AuthenticationtypeEnum, 'Type of information to be stored in cookie for authentication', required: false
 
     field :authentication_token, ID, 'The session token', null: true
@@ -251,7 +252,7 @@ module Mutations
       Rails.logger.info "[LoginMutation] successful user login with email: #{email}"
       { authentication_token: nil, user_id: user.id }
     end
-  
+
     def resolve_session_login(email, password)
       use_case = Sessions::CreateSession.perform(email: email, password: password)
 
@@ -282,7 +283,7 @@ module Mutations
         {
           value: jwt,
           expires: 1.day.from_now,
-          path: path, 
+          path: path,
           secure: secure,
           httponly: true
         }
