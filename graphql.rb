@@ -128,6 +128,6 @@ end
 
 # ~/app/graphql/project_name_schema.rb
 class ProjectNameSchema < GraphQL::schema
-  query Types::QueryType
-  mutation Types::MutationType
+  query(Types::QueryType)
+  mutation(Types::MutationType)
 end
