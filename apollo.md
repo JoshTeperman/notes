@@ -9,8 +9,8 @@ npm i graphql             // Also parses your GraphQL queries
 You will need an end point for your graphql server, which defaults to `/graphql`
 
 ```
-import ApolloClient from 'apollo-boost';
-import { InMemoryCach } from 'apollo-cache-memory';
+import { ApolloClient } from 'apollo-boost';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 import { HttpLink } from 'apollo-link-http';
 
 const client = new ApolloClient({ 
@@ -24,6 +24,10 @@ const client = new ApolloClient({
   defaultOptions: {},
 })
 ```
+
+`import ApolloClient from 'apollo-boost';` imports the full version of ApolloClient, which doesn't support specifying link / cache. You can `import { ApolloClient } from 'apollo-boost';`, which is the Apollo Boost version of ApolloClient and doesn't require link/cache. 
+
+Alternatively, you can just import the full client with `import ApolloClient from 'apollo-client';`.
 
 `cache`: Apollo Client uses an Apollo Cache instance to handle its caching strategy. The recommended cache is apollo-cache-inmemory, which exports an { InMemoryCache }.
 
@@ -69,7 +73,10 @@ To connect Apollo to React, use the `ApolloProvider` component exported from `@a
 
 `ApolloProvider` should be put somehwere high in your App, above anywhere you may want to make a Graphql Query. 
 
+#### Pattern 1:
 ```
+// App.js 
+
 import React from 'react';
 import { render } from 'react-dom';
 
@@ -84,6 +91,52 @@ const App = () => (
 );
 
 render(<App />, document.getElementById('root'))
+```
+
+#### Pattern 2:
+```
+// javascript/packs/clients/graphql.js
+
+import ApolloClient from 'apollo-client';
+import { InMemoryCache } from 'apollo-cache-memory';
+import { HttpLink } from 'apollo-link-http';
+
+const client = newApolloClient({ 
+  link: new HttpLink(),
+  cache: new InMemoryCahce(),  
+})
+
+export default client;
+
+
+// javascript/packs/containers/graphql/Provider.js
+
+import React from 'react';
+import { ApolloProvider } from '@apollo/react-hooks';
+
+import client from '../../clients/graphql';
+
+const Provider = ({ children }) => (
+  <ApolloProvider>
+    {children}
+  </ApolloProvider>
+)
+
+export default Provider;
+
+
+// App.js
+
+import React from 'react';
+import GraphQlProvider from './containers/graphql/Provider';
+
+const App = () => (
+  <GraphQlProvider>
+    <div>Hello World!</div>
+  </GraphQlProvider>
+)
+
+export default App;
 ```
 
 ### Query with React and `useQuery`
