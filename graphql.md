@@ -11,24 +11,24 @@ app/controllers/graphql_controller.rb
 
 ROOT: Graphql Directory
 -- schema.rb
-objects (or types)
+Objects (or types)
   -- base_object.rb           -> extends GraphQL::Schema::Object
   -- root_query_object.rb     -> extends BaseObject
   -- root_mutation_object.rb  -> extends BaseObject
   -- organisation_object.rb   -> extends BaseObject
-mutations
+Mutations
   -- base_mutation.rb         -> extends GraphQL::Schema::Mutation
   -- login_mutation.rb        -> extends BaseMutation
-enums
+Enums
   -- base_enum.rb             -> extends GraphQL::Schema::Enum
   -- user_type_enum.rb
   -- payment_method_enum.rb
   -- constants.rb
-input_objects
+Input_objects
   -- base_input_object.rb
   -- authentication_input_object.rb
   -- sort_input_object.rb
-errors
+Errors
   -- base_error_object.rb           -> extends GraphQL::ExecutionError
   -- unauthorized_error_object.rb   -> extends BaseErrorObject
   -- invalid_error_object.rb        -> extends BaseErrorObject
@@ -150,6 +150,27 @@ end
 ```
 
 ```
+// organisation_object.rb
+
+modules Objects
+  class OrganisationObject < BaseObject
+    field :name, String, 'The name of the organisation', null: false
+    field :website, String, 'The organisation\'s website', null: false
+  end
+end
+```
+
+### Mutations
+```
+// base_mutation.rb
+
+module Objects
+  class BaseMutation < GraphQL::Schema::Object
+  end
+end
+```
+
+```
 // root_mutation_object.rb
 
 module Objects
@@ -173,27 +194,6 @@ module Objects
 
       Objects::Errors::UnauthorizedErrorObject.new('Unauthorized')
     end
-  end
-end
-```
-
-```
-// organisation_object.rb
-
-modules Objects
-  class OrganisationObject < BaseObject
-    field :name, String, 'The name of the organisation', null: false
-    field :website, String, 'The organisation\'s website', null: false
-  end
-end
-```
-
-### Mutations
-```
-// base_mutation.rb
-
-module Objects
-  class BaseMutation < GraphQL::Schema::Object
   end
 end
 ```

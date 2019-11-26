@@ -10,7 +10,7 @@ Creates a new React element from the Component passed in using `React.createElem
 
 Convenient inline rendering without the remounting above. Pass in a function to be called when the `location` matches.
 
-### `<Route children> function`
+### `<Router children> function`
 
 Works like `render` except it renders whether the location matches or not. Receives the same route props, except when a location doesn't match the `match` prop is `null`.
 
@@ -46,6 +46,7 @@ ReactDOM.render(
   <Router>
     <Route path="/user/:username" component={User} />
   </Router>,
+  node
 );
 ```
 
@@ -96,6 +97,8 @@ history.replace(location)
 - `match.isExact` (bool) => true if the entire url was matched
 - `match.path` (string) => the path pattern used to match. Used to build nested `<Route />s`.
 - `match.url` (string) => the matched portion of the URL. Used to build nested `<Link />s`.
+
+Especially useful for dynamic links (using `/:id`), as you can grab the id with `const { id } = match.params` and use it in to fetch data for a particular Model.
 
 ## With Ruby on Rails routes.rb
 
@@ -227,5 +230,62 @@ Completed 200 OK in 6ms (Views: 3.1ms | ActiveRecord: 0.0ms)
 To navigate to `http://localhost:3000/challenges/new`, Rails is going to try to look for a `new` method in the `challenges_controller`, which doesn't exist. We could create a new method and a view for this route, but that won't allow us to use our entry point to our single page app. What we actually want is for Rails to still recognise that `/challenges` is our entry-point,
 `/challenges/new` => looks for `challenges#new`, which doesn't exist. Do I need a `new.html.erb` and provide another entry point to the React app?
 
-`/challenges/*other, to: 'challenges#index', default: {other: 'index'}`
-... this will force any call to `/challenges` to use `challenges#index`, yet allow different url strings.
+`get "/*other", to: 'challenges#index', default: {other: 'challenges'}`
+... this will force any call to `/` to use `challenges#index`, yet allow different url strings.
+
+## Hooks -> `useHistory()`
+
+Gives you access to the `history` object that you can use to navigate
+
+```
+import { useHistory } from 'react-router-dom';
+
+const HomeButton = () => {
+  let history = useHistory()
+
+  const handleClick = () => {
+    history.push("/home");
+  }
+
+  return (
+    <button onClick={handleClick}>Go Home</button>
+  );
+}
+```
+
+## Hooks -> `useParams()`
+
+```
+import { useParams, BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+const BlogPost = () => {
+  let { slug } = useParams();
+  return <div>Now showing post {slug}</div>;
+}
+
+ReactDOM.render(
+  <Router>
+    <Switch>
+      <Route path="/blog/:slug" component={BlogPost}>
+    </Switch>
+  </Router>,
+  node
+);
+```
+
+## `withRouter()`
+
+Higher Order Component that connects a component to the Router and passes `location`, `history`, and `match` down as props.
+
+```
+import { withRouter } from 'react-router-dom';
+
+const Component = (props) => {
+  const { history, location, match } = props
+
+  return (
+    <div>Some Component</div>
+  );
+}
+
+export default withRouter(Component);
+```
