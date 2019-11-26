@@ -141,7 +141,7 @@ export default App;
 
 ### Query with React and `useQuery`
 
-Wrap you query in a `gql` function and pass it to `useQuery` hook.
+Wrap your query in a `gql` function and pass it to `useQuery` hook.
 
 When your component renders the `useQuery` hook will run, returning a `result` object containing `loading`, `error`, and `data` properties. 
 
@@ -149,6 +149,21 @@ Apollo client tracks `loading` and `error` properties for you.
 
 Once your query response comes back it's value will be added to the data propery and cached to speed up subsequent queries.
 
+A basic query constant might look like:
+```
+import gql from 'graphql-tag';
+
+const GET_DOGS = gql`
+  {
+    dogs {
+      id
+      breed
+    }
+  }
+`;
+```
+
+A named query with a useQuery hook:
 ```
 import React from 'react';
 import { gql } from 'apollo-boost';
