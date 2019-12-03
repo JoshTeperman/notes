@@ -371,6 +371,85 @@ Add title slug to existing Blogs:
 
 
 
+# Models & Active Record
+
+## Model Callbacks
+
+`after_initialize`
+
+Runs after an Active Record Object is instantiated, eg: when `Model.new` is called, or when a record is loaded from the database.
+
+eg:
+
+```
+class User
+  after_initialize :set_defaults
+
+  private
+
+  def set_defaults
+    self.profile_image ||= "http://placehold.it/600x400",
+  end
+
+end
+```
+
+## Database Relationships
+
+Thinking about foreign keys: Which Model should 'own' the other, in other words has the foreign key of the other.
+
+### Blog Post
+- title: Baseball World Series, topic_id: 1
+- title: Superbowl, topic_id: 2
+- title: Training, topic_id: 1
+
+### Topic Model
+- id: baseball
+- id: NFL
+
+Trying to do this the other way around (where there is a blog id on each topic) won't work because each topic should be able to have multiple blog IDs.
+
+Therefore this should be a 'Topic has_many Blog Posts' relationship
+
+Therefore __we should have a Topic reference on Blog Post__.
+
+`Rails g migration AddTopicsToBlogs topic:references` => ( Add to Blogs the TopicId )
+
+```
+def change
+  add_reference :blogs, :topic, foreign_key: true
+end
+```
+
+## Scopes: Custom Queries
+
+Benefit: You should try to keep all the logic for your Models in the Model file, rather than having SQL / Active Record queries in your controllers. The controller should only realy manage data flow.
+
+### Option 1
+
+Create a Model class method:
+
+```
+class Person
+  def self.boys
+    where(gender: 'male')
+  end
+end
+
+=> can call with `Person.boys`
+```
+
+### Option 2
+
+Define a Scope:
+
+```
+scope :ruby_on_rails -> { where(topic: 'Ruby on rails') }
+
+=> can call with `Blog.ruby_on_rails`
+```
 
 
+## Concerns
 
+Since they are in the `/models` directory, concerns should deal with data. A module that doesn't deal with data should most likely go in the `/lib` directory.
