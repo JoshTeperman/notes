@@ -453,3 +453,87 @@ scope :ruby_on_rails -> { where(topic: 'Ruby on rails') }
 ## Concerns
 
 Since they are in the `/models` directory, concerns should deal with data. A module that doesn't deal with data should most likely go in the `/lib` directory.
+
+
+### included do block
+
+The `included do` hook is called when you `include Module` into a class, even before instantiating an Object from that class. It is used for defining relations, scopes, validations etc pertinent to the class.
+
+```
+included do
+
+end
+```
+
+<!-- https://stackoverflow.com/questions/28009772/ruby-modules-included-do-end-block -->
+
+```
+module MyModule
+  extend ActiveSupport::Concern
+
+  def first_method
+  // when someone includes this module, it will have these two methods exposed as instance methods
+  end
+
+  def second_method
+  end
+
+  included do
+  // ... this included hook will be called
+    second_class_method
+    // ... and this method will be executed
+  end
+
+  module ClassMethods
+    def first_class_method
+    // ... and these two methods exposed as class methods
+    end
+
+    def second_class_method
+    // ... these class methods will be mixed as class methods of the Class this module is included in
+    end
+  end
+end
+
+class MyClass
+  include MyModule
+end
+```
+
+The methods of `ClassMethods` are automatically mixed as class methods of `MyClass`. This is a common Ruby pattern, that `ActiveSupport::Concern` encapsulates. The non-Rails Ruby code is...
+
+```
+module MyModule
+  def self.included(base)
+    base.extend ClassMethods
+  end
+
+  module ClassMethods
+    def this_is_a_class_method
+    end
+  end
+end
+
+```
+
+...Therefore you can call `MyClass.first_class_method` 
+
+The `included do` hook is effectively the following code:
+
+```
+# non-Rails version
+module MyModule
+  def self.included(base)
+    base.class_eval do
+      # somecode
+    end
+  end
+end
+
+# Rails version with ActiveSupport::Concerns
+module MyModule
+  included do
+    # somecode
+  end
+end
+```
