@@ -396,14 +396,14 @@ end
 
 ## Database Relationships
 
-Thinking about foreign keys: Which Model should 'own' the other, in other words has the foreign key of the other.
+Thinking about foreign keys: Which Model should 'own' the other, in other words which Model inserts its `id` into the other's table?
 
-### Blog Post
+Blog Post
 - title: Baseball World Series, topic_id: 1
 - title: Superbowl, topic_id: 2
 - title: Training, topic_id: 1
 
-### Topic Model
+Topic Model
 - id: baseball
 - id: NFL
 
@@ -421,13 +421,59 @@ def change
 end
 ```
 
-## Scopes: Custom Queries
+### Relationship: `has_many :A, through: :B`
+
+If two tables share a common association, eg: an `Author` has `:books`, and a `Genre` has `:books`, then you can say that:
+- an `Author` has `:genres`, through: `:books`
+- and a `Genre` has `:authors`, through: `:books`
+
+Therefore:
+
+```
+# author.rb
+
+has_many :books, inverse_of :author
+has_many :genres, through: :books
+```
+```
+# genre.rb
+
+has_many :books, inverse_of :genre
+has_many :authors, through: :books
+```
+
+Now we can call:
+```
+author.genres
+genre.authors
+```
+
+We can also create a join table where we want straight many-to-many relationships:
+
+```
+# user.rb
+
+has_many :user_skills, inverse_of :user
+has_many :skills, through: :user_skills
+```
+```
+# skill.rb
+
+has_many :user_skills, inverse_of: :skill
+has_many :users, through: :user_skills
+```
+```
+# user_skill.rb
+
+belongs_to :user, inverse_of: :user_skills
+belongs_to :skill, inverse_of: :user_skills
+```
+
+## Custom Queries
 
 Benefit: You should try to keep all the logic for your Models in the Model file, rather than having SQL / Active Record queries in your controllers. The controller should only realy manage data flow.
 
-### Option 1
-
-Create a Model class method:
+#### Option 1: Create a Model class method
 
 ```
 class Person
@@ -439,16 +485,13 @@ end
 => can call with `Person.boys`
 ```
 
-### Option 2
-
-Define a Scope:
+#### Option 2: Define a Scope
 
 ```
 scope :ruby_on_rails -> { where(topic: 'Ruby on rails') }
 
 => can call with `Blog.ruby_on_rails`
 ```
-
 
 ## Concerns
 
@@ -459,11 +502,6 @@ Since they are in the `/models` directory, concerns should deal with data. A mod
 
 The `included do` hook is called when you `include Module` into a class, even before instantiating an Object from that class. It is used for defining relations, scopes, validations etc pertinent to the class.
 
-```
-included do
-
-end
-```
 
 <!-- https://stackoverflow.com/questions/28009772/ruby-modules-included-do-end-block -->
 
@@ -471,26 +509,30 @@ end
 module MyModule
   extend ActiveSupport::Concern
 
-  def first_method
   // when someone includes this module, it will have these two methods exposed as instance methods
+
+  def first_method
   end
 
   def second_method
   end
-
-  included do
+  
   // ... this included hook will be called
-    second_class_method
+  
+  included do
     // ... and this method will be executed
+
+    second_class_method
   end
 
   module ClassMethods
-    def first_class_method
     // ... and these two methods exposed as class methods
+    // ... these class methods will be mixed as class methods of the Class this module is included in
+    
+    def first_class_method
     end
 
     def second_class_method
-    // ... these class methods will be mixed as class methods of the Class this module is included in
     end
   end
 end
@@ -535,5 +577,59 @@ module MyModule
   included do
     # somecode
   end
+end
+```
+
+## Nested Attributes
+
+Refers to a way to save attributes on associated models __through__ the parent model with the `accepts_nested_attributes_for` class method.
+
+Consider the following relation:
+
+```
+class User
+  has_one :avatar
+  accepts_nested_attributes_for :avatar
+end
+```
+
+You can save attributes (ie: create new instances of both Objects) trough nested attributes:
+
+```
+params = { user: { name: "Josh", avatar_attributes: { image: "image.png"}}}
+User.create(params['user'])
+```
+
+Active record may have trouble recognising the inverse model associations, in which case you'll need to declare the `inverse_of`.
+
+### `reject_if` validation
+
+```
+class Member
+  has_many :posts, inverse_of: :member
+  accepts_nested_attributes_for :posts, reject_if proc: {|attrs| attrs['title'].blank? }
+end
+```
+```
+// when creating multiple nested attributes, pass an array of hashes:
+
+params = { member: { name: "Josh", posts_attributes: [
+  title: 'Some Title',
+  title: 'Some Other Title',
+  title: ''
+]}}
+```
+```
+new_member = Member.create(params['member'])
+
+new_member.posts.count 
+=> 2
+```
+
+### Strong params with `nested_attributes_for`
+
+```
+def portfolio_params
+  params.require(:portfolio).permit(:title, :subtitle, :body, technologies_attributes: [:name])
 end
 ```
