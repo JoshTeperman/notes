@@ -373,6 +373,42 @@ Add title slug to existing Blogs:
 
 # Models & Active Record
 
+## `includes` method
+
+Will collect multiple subsequent queries into a single query. One way of thinking about this is that Active Record will use the inital query for a Model / Collection, and then allow subsequent queries to reference that data rather than having to go back to the database to make a new query. 
+
+For example, say you have `Author`, `Book` and `Genre` models.
+
+```
+@books = Book.all
+
+@books.each do |book|
+  book.title
+  book.author.name
+  book.author.country
+  book.genre.name
+end
+```
+This will result in queries for: 
+- all `Book` models
+- `Author` from `authors` table * `n` times, where `n` is the number of `books`
+- `Genre` from `genres` table * `n` times, where `n` is the number of `books`
+
+If you have 3 books, then you will make 7 database queries, one initial query to get all of the `Book` ids, then one query each for `Author` and `Genre` for each of those `books`.
+
+Using `.includes` allows you to make one query for each table, then each subsequent query uses the data from that initial query, meaning that the total number of queries will be the same, no matter how many `books` there are in the database (ie: the number of repetitions in the for loop).
+
+```
+@books = Books.includes(:author, :genre)
+```
+
+Now our queries are:
+- `SELECT "books".* FROM "books"`
+- `SELECT "authors".* FROM "authors" WHERE "authors"."id" IN (3, 2, 1)`
+- `SELECT "genres".* FROM "genres" WHERE "genres"."id" IN (2, 3, 5)`
+
+Note that we are still fetching multiple `authors` and `genres`, but we are fetching only the resources we need, and in a single query for each model.
+
 ## Model Callbacks
 
 `after_initialize`
