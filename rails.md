@@ -616,6 +616,30 @@ module MyModule
 end
 ```
 
+### Controller Concerns: Add before_filter devise params sanitizer:
+
+```
+# controllers/concerns/devise_whitelist.rb
+
+module DeviseWhitelist
+  extend ActiveSupport::Concern
+
+  included do
+    before_filter :configure_permitted_params if devise_controller?
+  end
+
+  private
+
+  def configure_permitted_params
+    devise_paramaeter_sanitizer.permit(:sign_up, keys: [:name])
+  emd
+end
+```
+```
+# application_controller.rb
+```
+
+
 ## Nested Attributes
 
 Refers to a way to save attributes on associated models __through__ the parent model with the `accepts_nested_attributes_for` class method.
@@ -669,3 +693,29 @@ def portfolio_params
   params.require(:portfolio).permit(:title, :subtitle, :body, technologies_attributes: [:name])
 end
 ```
+
+# Authorization - devise
+
+### Installation
+
+`gem devise`
+
+`rails generate devise:install`
+
+`rails g devise:views`
+
+`rails g devise User`
+
+### Customise routes
+
+```
+devise_for :users, path: '', path_names: { sign_in: 'login', sign_up: 'register', sign_out: 'logout' }
+```
+
+
+
+# Forms
+
+Set the default cursor starting point for the form
+
+`autofocus: true`
