@@ -883,8 +883,10 @@ Extract that logic out into a method and add to Application Helper Module.
 
 As a rule of thumb, extract HTML to partials, ruby logic (case statements etc) to view helpers.
 
+### Basic view helper
+
 ```
-# app/helpers/application_helper
+# app/helpers/application_helper.rb
 
 def login_helper
   if current_user.is_a?(User)
@@ -899,4 +901,25 @@ end
 # application_hmtl.erb
 
 <%= login_helper %>
+```
+
+### with `content_tag`
+
+`content_tag` are very useful for programatically returning HTML, classes, content that would typically clutter up a rails view file.
+
+You can pass in an argument (from the view page) for additional configuration.
+
+```
+# application_helper.rb
+
+def source_helper(page)
+  message = "Welcome. Thanks for visiting us from #{session[:source]}. You are on the #{page} page."
+  content_tag(:p, message, class: 'source-message') if session[:source]
+end
+```
+
+```
+# application.html.erb
+
+<%= source_helper("main") %>
 ```
