@@ -818,6 +818,16 @@ To configure styling for different layouts:
 
 ## Layouts - `<head>`
 
+### `stylesheet_link_tag`
+
+Specify which stylesheet to use. Default path is `app/assets/`
+
+`<%= stylesheet_link_tag 'application', media: all, 'data-turbolinks-track': 'reload' %>`
+
+Use a CDN:
+
+`<%= stylesheet_link_tag 'CDN_URL'>`
+
 ### Customising Page Title
 
 You can define and render a `@page_tite` in your `layouts/application.html.erb` file, and override it depending on the controller method:
@@ -842,6 +852,8 @@ end
 ```
 
 ## Layouts - Partials
+
+### Basic Partials
 
 You can pass an object / data to a partial locally (using 'locals'), since the partial is rendered by the view itself.
 
@@ -875,6 +887,63 @@ You can also dynamically create classes using locals. For example, pass in the t
 
 <div class="<%= location %>">Navbar</div>
 ```
+
+### Partials for Data Collections
+
+Rails can render collections by default if you follow this convention:
+- Use the `render` method in the view and pass in the plural collection you want to render
+- Create a partial named after the singular of the collection
+- Must match the name of the controller / model
+
+```
+# blogs/index.html.erb
+
+<%= render @blogs %>
+```
+```
+# blogs/_blog.html.erb
+
+<%= blog.title %>
+<%= blog.subtitle %>
+<%= blog.body %>
+```
+```
+# blogs_controller
+
+def index
+  @blogs = Blog.include(:title, :subtitle, :body)
+end
+```
+
+### Custom Partials for Data Collections
+
+Since Rails maps partials to the current directory, the collection & model name, and the partial file.
+If you want to render a collection that doesn't follow that convention you have pass in custom options:
+
+For example, if you have Model `Portfolio`, and you are rendering `@portfolio_items`:
+```
+# portfolios_controller
+
+def index
+  @portfolio_items = Portfolio.all
+end
+```
+```
+# portfolios/index.html.erb
+
+<%= render partial: 'portfolio_item', collection: @portfolio_items %>
+```
+```
+# _portfolio_item.html.erb
+
+<%= portfolio_item.title %>
+<%= portfolio_item.body %>
+```
+
+`partial: 'portfolio_item'` refers to the name of the partial. If the partial is in a different directory then you need to specify the path.
+
+`collection: @portfolio_items` is where you pass in the data collection to render
+
 
 ## View Helpers / Application Helpers
 
@@ -923,3 +992,34 @@ end
 
 <%= source_helper("main") %>
 ```
+
+### Partials Spacer Template
+
+Create a spacing template called `blog_ruler` for the `_blog.html.erb` partial.
+
+Will not be applied to the last item in the collection.
+
+This only works if you define `partial: @blogs`.
+
+```
+# blogs/index.html.erb
+
+<%= render partial: @blogs, spacing_template: 'blog_ruler' %>
+```
+```
+# blog_ruler.html.erb
+
+<hr class="blog-spacing">
+```
+
+## Other
+
+### cache do
+
+Will cache html, css, assets on the client browser side to speed up subsequent rendering.
+Do not use caching if you need the client to be able to update the page and see different data.
+
+```
+<% cache do %>
+  <div><%= render @blogs %></div>
+<% end %>
