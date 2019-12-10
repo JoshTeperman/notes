@@ -213,7 +213,7 @@ Blog Load (0.6ms)  SELECT "blogs".* FROM "blogs" WHERE "blogs"."status" = $1  [[
 ```
 
 
-# Routes
+# Controllers & Routes
 
 ## Namespace & Scope
 
@@ -431,8 +431,30 @@ Add title slug to existing Blogs:
 
 `Blog.find_each(&:save)`
 
+## Sharing data between pages with Rails Sessions
 
+__Do no secure confidential data in sessions, they are not secure!!!__
 
+`Session` is an object, therefore you can set and retrieve session data as you would from hash.
+
+For example, if you could retrieve a referrer id from a query string and use that in your app:
+
+```
+# application_controller
+before_action :set_referrer
+
+def set_referrer
+  session[referrer] = params[:src]
+end
+```
+```
+# application.html.erb
+<%= yield %>
+
+<% if session[:referrer] %>
+  Welcome, thanks for visiting us from <%= session[:referrer] %>
+<% end %>
+```
 
 # Models & Active Record
 
@@ -782,3 +804,99 @@ devise_for :users, path: '', path_names: { sign_in: 'login', sign_up: 'register'
 Set the default cursor starting point for the form
 
 `autofocus: true`
+
+
+# Views
+
+## Layouts - Multiple Layouts
+
+To configure styling for different layouts:
+- `stylesheet_link_tag` must correspond with file from `stylesheets/` directory
+- Make sure to remove the `require tree .` from `application.scss`.
+- Add `layout "layout_file_name"` to the corresponding controller
+- Precompile assets: Add `Rails.application.config.assets.precompile += %w( blogs.css )` to `config/initializers/assets.rb`
+
+## Layouts - `<head>`
+
+### Customising Page Title
+
+You can define and render a `@page_tite` in your `layouts/application.html.erb` file, and override it depending on the controller method:
+
+```
+# layouts/application.html.erb
+
+<title><%= @page_title %></title>
+```
+```
+# blogs_controller.rb
+
+def show
+  @page_title = @blog.title
+end
+```
+
+### Meta SEO keywords
+
+```
+<meta name="keywords" content="my keywords here" />
+```
+
+## Layouts - Partials
+
+You can pass an object / data to a partial locally (using 'locals'), since the partial is rendered by the view itself.
+
+```
+# blogs_controller
+
+def new
+  @blog = Blog.new
+end
+```
+```
+# views/blogs/new.html.erb
+
+<%= render 'shared/form', blog: @blog %>
+```
+```
+# views/shared/_form.html.erb
+
+<%= form_for(blog) do |f| %>
+```
+
+You can also dynamically create classes using locals. For example, pass in the top/bottom location of a navbar to different layout files:
+
+```
+# application.html.erb
+
+<%= render 'nav', location: 'page-top' %>
+```
+```
+# _nav.html.erb
+
+<div class="<%= location %>">Navbar</div>
+```
+
+## View Helpers / Application Helpers
+
+Best to use them when you find yourself adding ruby logic to a layout or view.
+Extract that logic out into a method and add to Application Helper Module.
+
+As a rule of thumb, extract HTML to partials, ruby logic (case statements etc) to view helpers.
+
+```
+# app/helpers/application_helper
+
+def login_helper
+  if current_user.is_a?(User)
+    lienk_to 'Logout', destroy_user_session_path, method: :delete
+  else
+    link_to 'Register', new_user_registration_path
+      link_to 'Login', new_user_session_path
+    <% end %>
+end
+```
+```
+# application_hmtl.erb
+
+<%= login_helper %>
+```
