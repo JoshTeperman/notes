@@ -456,11 +456,17 @@ end
 <% end %>
 ```
 
-# Models & Active Record
+# Active Record
 
 ### What is Active Record?
 
-Active Record encapsulates the 'M' in MVC. It is the Rails implementation of the ORM pattern. It abstracts database table data, database access, and domain-logic into Objects.
+Active Record encapsulates the 'M' in MVC, the layer responsible for business data and logic. It is the Rails implementation of the Active Record pattern which itself is an implementation of the Object Relational Mapping, or 'ORM' pattern.
+
+>ORM is a techniqe that connects the rich objects of an application to tables in a relational database management system. 
+
+Active Record abstracts database table data, database access, and domain-logic into Objects, facilitating the creation and use of 'business objects' whos data requires persistent storage to a database.
+
+In the Active Record pattern, Objects carry both persistent data and behaviour which operates on that data.
 
 From DHH first release of Rails 0.5.0 http://blade.nagaokaut.ac.jp/cgi-bin/scat.rb/ruby/ruby-talk/107370
 
@@ -479,14 +485,137 @@ describe the former and integrating the Single Table Inheritance
 pattern for the latter, Active Record narrows the gap of functionality 
 between the data-mapper and active record approach.
 
-### What is Action Pack?
+## Active Record Objects
 
-Action Page separates the response to a web request into controller `action` and `view`, or the 'V' and 'C' in MVC. The controller action is where logic is performed, often a connection to a database is used, before deciding to either render a template or redirect to another action. 
+Active Record Objects can be created by extending the `ApplicationRecord` class:
 
-Action Pack implements actions as public methods on controllers and uses Action Views to implement template rendering.
+`class myObject < ApplicationRecord; end`
+
+This will create a `myObject` model, mapped to a `my_objects` table in the database. ActiveRecord will then allow you to map the columns for each row in that table to the attributes of instances of `myObject`.
+
+Active Record Objects don't specify their attributes directly, but rather infer them from the table definition with which they're linked. Modifying attributes and object types is done directly on the database, after which the mapping that binds the myObject class to its database table will update all related Active Record Objects automatically.
+
+### `ActiveRecord::Base` & `ApplicationRecord`
+
+As of Rails 5, `ApplicationRecord` is an abstract class that inherits from `ActiveRecord::Base`, an Object that provides a number of useful methods. 
+
+Customised code added to `ApplicationRecord` will be localized to Models inheriting from that class, without conflicting with or overwriting `ActiveRecord::Base`. 
+
+### STI - Single Table Inheritance
+
+https://www.freecodecamp.org/news/single-table-inheritance-vs-polymorphic-associations-in-rails-af3a07a204f2/
+
+Where many subclasses inherit from a single superclass, and all of the data is stored in a single table. Different subclasses are defined by a `type` column on the superclass.
+
+It is important to create the `type` column, as this tells Active Record that we want to use STI.
+
+Inherited classes will therefore 
+- have shared data / state
+- be able to customise with unique methods
+- share validations
+
+Cons:
+- Can't add uniqe attributes to subclasses. The only way is to add them to the super class and have `nil` fields on other classes which makes validation difficult.
+- Without filtering, searching can lead to performance issues, as searching for one subclass requires a search for all superclass rows.
+- Nothing stopping the wrong data being added to the wrong subclass.
+
+=> Consider using polymorphic associations if two subclasses need to have their own separate database tables.
+
+```
+rails g migration Company name type
+```
+```
+class ApplicationRecord < ActiveRecord::Base; end
+
+class Company < ApplicationRecord; end
+
+class Firm < Company; end
+```
+
+```
+Firm.table_name
+Company.table_name
+=> 'companies'
+
+Firm.base_class
+Company.base_class
+=> 'companies'
+
+Firm.inheritance_column
+=> 'type'
+```
+
+The base class will be instantiated with `type` set to `nil`. When a subclass is instanciated however, its `type` will be set to the name of the subclass.
+
+```
+Company.new.changed?
+=> false
+
+Firm.new.changed?
+=> true
+
+Firm.new.changes
+=> {"type"=>[nil, "Firm"]} 
+
+```
+
+### Polymorphic association
+
+https://www.freecodecamp.org/news/single-table-inheritance-vs-polymorphic-associations-in-rails-af3a07a204f2/
+
+Where one model can `belong_to` multiple models with a single association. 
+
+This is useful when several models do not have a relationship or share data with one another, but have a relationship with a polymorphic class. 
+
+In other words, one model can be two different things, but those two things are completely different have have separate tables.
+
+Consider Facebook `Group` and `Person` classes. Both Models are not related, except for being a type of `User`.
+
+Both can have `Posts`. Once could try to create two separate `has_many` associations
+
+```
+class Post belongs_to :group belongs_to :person; end
+
+class Group has_may :posts; end
+class Person has_many :posts; end 
+```
+
+If we wanted to find out who owned a particular post, we would have two competing foreign keys: `group_id` and `person_id`. 
+
+A polymorphic association condenses the functionality into a single association `postable`, which both `User` and `Person` can share:
+
+```
+class Post belongs_to :postable, polymorphic: true; end
+
+class Group has_many :posts, as :postable; end
+class Person has_many :posts, as :postable; end
+```
+
+Note, `<class>able` is a Rails convention. You can name the polymorphic association anything you want.
+
+### Using `abstract_class = true` 
+
+An abstract class is a class that is not persistent, ie: it does not have a table in the database.
+Using an abstract class implies that it's data is not persistent and that its purpose is to share functionality with with subclasses via inheritance. 
 
 
-## `includes` method
+### Creating Active Record Objects
+
+`Object.new` will create a new Object, while `Object.save` will return the object and commit the record to the database. 
+
+If a block is provided, `create` and `new` will yield the new object to the block for initialization:
+
+```
+User.new do |u|
+  u.name = 'Josh'
+  u.age = 24
+end
+```
+
+
+## Optimisation
+
+### `includes` method
 
 Will collect multiple subsequent queries into a single query. One way of thinking about this is that Active Record will use the inital query for a Model / Collection, and then allow subsequent queries to reference that data rather than having to go back to the database to make a new query.
 
@@ -825,8 +954,6 @@ end
 devise_for :users, path: '', path_names: { sign_in: 'login', sign_up: 'register', sign_out: 'logout' }
 ```
 
-
-
 # Forms
 
 Set the default cursor starting point for the form
@@ -835,6 +962,12 @@ Set the default cursor starting point for the form
 
 
 # Views
+
+### What is Action Pack?
+
+Action Page separates the response to a web request into controller `action` and `view`, or the 'V' and 'C' in MVC. The controller action is where logic is performed, often a connection to a database is used, before deciding to either render a template or redirect to another action. 
+
+Action Pack implements actions as public methods on controllers and uses Action Views to implement template rendering.
 
 ## Layouts - Multiple Layouts
 
