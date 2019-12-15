@@ -458,6 +458,34 @@ end
 
 # Models & Active Record
 
+### What is Active Record?
+
+Active Record encapsulates the 'M' in MVC. It is the Rails implementation of the ORM pattern. It abstracts database table data, database access, and domain-logic into Objects.
+
+From DHH first release of Rails 0.5.0 http://blade.nagaokaut.ac.jp/cgi-bin/scat.rb/ruby/ruby-talk/107370
+
+>Active Record connects business objects and database tables to create a 
+persistable domain model where logic and data is presented in one 
+wrapping. It's an implementation of the object-relational mapping (ORM) 
+pattern by the same name as described by Martin Fowler:
+
+    An object that wraps a row in a database table or view,
+    encapsulates the database access, and adds domain logic on that data.
+
+>Active Record's main contribution to the pattern is to relieve the 
+original of two stunting problems: lack of associations and 
+inheritance. By adding a simple domain language-like set of macros to 
+describe the former and integrating the Single Table Inheritance 
+pattern for the latter, Active Record narrows the gap of functionality 
+between the data-mapper and active record approach.
+
+### What is Action Pack?
+
+Action Page separates the response to a web request into controller `action` and `view`, or the 'V' and 'C' in MVC. The controller action is where logic is performed, often a connection to a database is used, before deciding to either render a template or redirect to another action. 
+
+Action Pack implements actions as public methods on controllers and uses Action Views to implement template rendering.
+
+
 ## `includes` method
 
 Will collect multiple subsequent queries into a single query. One way of thinking about this is that Active Record will use the inital query for a Model / Collection, and then allow subsequent queries to reference that data rather than having to go back to the database to make a new query.
