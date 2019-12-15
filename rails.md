@@ -464,7 +464,7 @@ end
 
 Active Record encapsulates the 'M' in MVC, the layer responsible for business data and logic. It is the Rails implementation of the Active Record pattern which itself is an implementation of the Object Relational Mapping, or 'ORM' pattern.
 
->ORM is a techniqe that connects the rich objects of an application to tables in a relational database management system. 
+>ORM is a techniqe that connects the rich objects of an application to tables in a relational database management system.
 
 Active Record abstracts database table data, database access, and domain-logic into Objects, facilitating the creation and use of 'business objects' whos data requires persistent storage to a database.
 
@@ -472,19 +472,19 @@ In the Active Record pattern, Objects carry both persistent data and behaviour w
 
 From DHH first release of Rails 0.5.0 http://blade.nagaokaut.ac.jp/cgi-bin/scat.rb/ruby/ruby-talk/107370
 
->Active Record connects business objects and database tables to create a 
-persistable domain model where logic and data is presented in one 
-wrapping. It's an implementation of the object-relational mapping (ORM) 
+>Active Record connects business objects and database tables to create a
+persistable domain model where logic and data is presented in one
+wrapping. It's an implementation of the object-relational mapping (ORM)
 pattern by the same name as described by Martin Fowler:
 
     An object that wraps a row in a database table or view,
     encapsulates the database access, and adds domain logic on that data.
 
->Active Record's main contribution to the pattern is to relieve the 
-original of two stunting problems: lack of associations and 
-inheritance. By adding a simple domain language-like set of macros to 
-describe the former and integrating the Single Table Inheritance 
-pattern for the latter, Active Record narrows the gap of functionality 
+>Active Record's main contribution to the pattern is to relieve the
+original of two stunting problems: lack of associations and
+inheritance. By adding a simple domain language-like set of macros to
+describe the former and integrating the Single Table Inheritance
+pattern for the latter, Active Record narrows the gap of functionality
 between the data-mapper and active record approach.
 
 ## Active Record Objects
@@ -499,9 +499,9 @@ Active Record Objects don't specify their attributes directly, but rather infer 
 
 ### `ActiveRecord::Base` & `ApplicationRecord`
 
-As of Rails 5, `ApplicationRecord` is an abstract class that inherits from `ActiveRecord::Base`, an Object that provides a number of useful methods. 
+As of Rails 5, `ApplicationRecord` is an abstract class that inherits from `ActiveRecord::Base`, an Object that provides a number of useful methods.
 
-Customised code added to `ApplicationRecord` will be localized to Models inheriting from that class, without conflicting with or overwriting `ActiveRecord::Base`. 
+Customised code added to `ApplicationRecord` will be localized to Models inheriting from that class, without conflicting with or overwriting `ActiveRecord::Base`.
 
 ### STI - Single Table Inheritance
 
@@ -511,7 +511,7 @@ Where many subclasses inherit from a single superclass, and all of the data is s
 
 It is important to create the `type` column, as this tells Active Record that we want to use STI.
 
-Inherited classes will therefore 
+Inherited classes will therefore
 - have shared data / state
 - be able to customise with unique methods
 - share validations
@@ -557,7 +557,7 @@ Firm.new.changed?
 => true
 
 Firm.new.changes
-=> {"type"=>[nil, "Firm"]} 
+=> {"type"=>[nil, "Firm"]}
 
 ```
 
@@ -565,9 +565,9 @@ Firm.new.changes
 
 https://www.freecodecamp.org/news/single-table-inheritance-vs-polymorphic-associations-in-rails-af3a07a204f2/
 
-Where one model can `belong_to` multiple models with a single association. 
+Where one model can `belong_to` multiple models with a single association.
 
-This is useful when several models do not have a relationship or share data with one another, but have a relationship with a polymorphic class. 
+This is useful when several models do not have a relationship or share data with one another, but have a relationship with a polymorphic class.
 
 In other words, one model can be two different things, but those two things are completely different have have separate tables.
 
@@ -579,10 +579,10 @@ Both can have `Posts`. Once could try to create two separate `has_many` associat
 class Post belongs_to :group belongs_to :person; end
 
 class Group has_may :posts; end
-class Person has_many :posts; end 
+class Person has_many :posts; end
 ```
 
-If we wanted to find out who owned a particular post, we would have two competing foreign keys: `group_id` and `person_id`. 
+If we wanted to find out who owned a particular post, we would have two competing foreign keys: `group_id` and `person_id`.
 
 A polymorphic association condenses the functionality into a single association `postable`, which both `User` and `Person` can share:
 
@@ -595,15 +595,15 @@ class Person has_many :posts, as :postable; end
 
 Note, `<class>able` is a Rails convention. You can name the polymorphic association anything you want.
 
-### Using `abstract_class = true` 
+### Using `abstract_class = true`
 
 An abstract class is a class that is not persistent, ie: it does not have a table in the database.
-Using an abstract class implies that it's data is not persistent and that its purpose is to share functionality with with subclasses via inheritance. 
+Using an abstract class implies that it's data is not persistent and that its purpose is to share functionality with with subclasses via inheritance.
 
 
 ### Creating Active Record Objects
 
-`Object.new` will create a new Object, while `Object.save` will return the object and commit the record to the database. 
+`Object.new` will create a new Object, while `Object.save` will return the object and commit the record to the database.
 
 If a block is provided, `create` and `new` will yield the new object to the block for initialization:
 
@@ -967,7 +967,7 @@ Set the default cursor starting point for the form
 
 ### What is Action Pack?
 
-Action Page separates the response to a web request into controller `action` and `view`, or the 'V' and 'C' in MVC. The controller action is where logic is performed, often a connection to a database is used, before deciding to either render a template or redirect to another action. 
+Action Page separates the response to a web request into controller `action` and `view`, or the 'V' and 'C' in MVC. The controller action is where logic is performed, often a connection to a database is used, before deciding to either render a template or redirect to another action.
 
 Action Pack implements actions as public methods on controllers and uses Action Views to implement template rendering.
 
@@ -1122,12 +1122,30 @@ As a rule of thumb, extract HTML to partials, ruby logic (case statements etc) t
 
 def login_helper
   if current_user.is_a?(User)
-    lienk_to 'Logout', destroy_user_session_path, method: :delete
+    link_to 'Logout', destroy_user_session_path, method: :delete
   else
     link_to 'Register', new_user_registration_path
       link_to 'Login', new_user_session_path
     <% end %>
 end
+```
+### Pass CSS classes into view helper
+
+Very useful if you want to reuse a helper in multiple places, but with different syling. For example, styling navigation links differently:
+```
+# application_helper.rb
+
+def nav_links_helper(style)
+  <%= link_to 'Login', new_user_session_path, class: style>
+  <%= link_to 'Registor', new_user_registration_path, class: style>
+end
+```
+```
+# application.html.erb
+<%= nav_links_helper('header-nav') %>
+
+# _footer.html.erb
+<%= nav_links_helper('footer-nav') %>
 ```
 ```
 # application_hmtl.erb
