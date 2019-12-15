@@ -29,7 +29,9 @@ YourApp::Application.config.secret_key_base = 'your-secret'
 `rails g resource Pages name:string` will create model, database table, empty controller, and empty views
 
 `rails g migration <AddColumnNameToTableName> columnName:datatype`
+
 `rails g migration <RemoveColumnNameFromTableName> columnName:datatype`
+
 
 ## Customise application.rb
 ```
@@ -1184,3 +1186,16 @@ Do not use caching if you need the client to be able to update the page and see 
 <% cache do %>
   <div><%= render @blogs %></div>
 <% end %>
+```
+
+# Rake
+
+`rake -T db` : displays all rake db commands
+
+`rake db:migrate:status` : displays status of migrations
+
+`rake db:rollback` : undo last migration
+
+`rake db:rollback STEP=2` : undo last 2 migrations
+
+`rake db:migrate:up VERSION=20140921124955` run specific migration
