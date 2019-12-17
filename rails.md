@@ -38,8 +38,8 @@ YourApp::Application.config.secret_key_base = 'your-secret'
 // application.rb
 
 module AppName
-  class Application < Rails::Application
 
+  class Application < Rails::Application
     # Default generators, default to uuids
     config.generators do |g|
       g.orm :active_record, primary_key_type: :uuid
@@ -1206,6 +1206,56 @@ Do not use caching if you need the client to be able to update the page and see 
 <% end %>
 ```
 
+### Tweet Link Regex Helper
+```ruby
+# helpers/pages_helper.rb
+
+module PagesHelper
+  def twitter_parser(tweet)
+    regex = %r{
+      \b
+      (
+        (?: [a-z][\w-]+:
+         (?: /{1,3} | [a-z0-9%] ) |
+          www\d{0,3}[.] |
+          [a-z0-9.\-]+[.][a-z]{2,4}/
+        )
+        (?:
+         [^\s()<>]+ | \(([^\s()<>]+|(\([^\s()<>]+\)))*\)
+        )+
+        (?:
+          \(([^\s()<>]+|(\([^\s()<>]+\)))*\) |
+          [^\s`!()\[\]{};:'".,<>?«»“”‘’]
+        )
+      )
+    }ix
+
+    tweet.gsub(regex) do |url|
+      "<a href='#{url}' target='_blank'>#{url}</a>"
+    end.html_safe
+  end
+end
+```
+```ruby
+# tech_news.html.erb
+
+<div>
+  <h1 class="cover-heading">Rails News</h1>
+
+  <div class="row">
+    <%= @tweets.each do |tweet| %>
+      <div class="col-md-6">
+        <div class="tech-news">
+          <div class="card">
+            <%= tweet_parser(tweet) %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+```
+
 # Rake
 
 `rake -T db` : displays all rake db commands
@@ -1217,3 +1267,45 @@ Do not use caching if you need the client to be able to update the page and see 
 `rake db:rollback STEP=2` : undo last 2 migrations
 
 `rake db:migrate:up VERSION=20140921124955` run specific migration
+
+# `lib` directory
+Isolate modules from the rest of the application. Should be loosely coupled so can be called by any part of of your application.
+
+Good for communicating with external APIs, parsing retrieved data, then making that available to your app.
+
+Comparable to building out Gems and integrating those with your app.
+
+### Load modules in lib directory
+```
+# application.rb
+
+module MyAppName
+  class Application < Rails::Application
+    config.eager_load_paths << "#{Rails.root}/lib"
+  end
+end
+```
+
+## Module structure
+
+```
+# module_name.rb
+
+module ModuleName
+  def self.some_method
+    # do something
+  end
+end
+```
+Module is now available in app:
+
+```
+# my_controller.rb
+
+class MyController < ApplicationController
+  def index
+    @mydata = ModuleName.some_method
+  end
+end
+```
+
