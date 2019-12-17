@@ -13,9 +13,9 @@ Rails Generator Source Code: https://github.com/rails/rails/blob/master/railties
 
 `bundle exec rake secret`
 
-```
-// config/initializers/secret_token.rb
-// check app_name: Rails.application.class.parent_name
+```ruby
+# config/initializers/secret_token.rb
+# check app_name: Rails.application.class.parent_name
 
 YourApp::Application.config.secret_key_base = 'your-secret'
 ```
@@ -34,8 +34,8 @@ YourApp::Application.config.secret_key_base = 'your-secret'
 
 
 ## Customise application.rb
-```
-// application.rb
+```ruby
+# application.rb
 
 module AppName
 
@@ -71,7 +71,7 @@ end
 # Coding in Rails
 Use `before_action` to set current model for each controller method from params
 
-```
+```ruby
 class BlogsController > ApplicationController
   before_action :set_blog, only: [:show]
 
@@ -96,7 +96,7 @@ end
 
 Use `before_action` to set current model for each controller method from params
 
-```
+```ruby
 class BlogsController > ApplicationController
   before_action :set_blog, only: [:show]
 
@@ -135,7 +135,7 @@ To use delete, pass in the resource path, eg `blog_path`, with the resource as a
 
 Eg: to create a link to delete a blog post:
 
-```
+```ruby
 <%= link_to 'Delete Post', post_path(@post), method: :delete, data: { confirm: 'Are you sure? } %>
 ```
 ---
@@ -144,7 +144,7 @@ Eg: to create a link to delete a blog post:
 
 Describes what you want to happen after previous action.
 
-```
+```ruby
 @blog.destroy
 
 respond_to do |format|
@@ -164,7 +164,7 @@ Create a `status` Enum for `Blog` model.
 
 Going to need a `status` attribute, that will be an Integer, and a default value.
 
-```
+```ruby
 rails g migration add_post_status_to_blogs status:integer
 
 def change
@@ -176,8 +176,8 @@ rails db:migrate
 
 Create Enum:
 
-```
-// blog.rb
+```ruby
+# blog.rb
 
 enum status: {
   draft: 0,
@@ -200,7 +200,7 @@ Query the Enum and return a boolean:
 Update the Enum with a bang method:
 
 `Blog.last.published!`
-```
+```ruby
 (0.2ms)  BEGIN
   SQL (9.2ms)  UPDATE "blogs" SET "status" = $1, "updated_at" = $2 WHERE "blogs"."id" = $3  [["status", 0], ["updated_at", "2019-12-01 00:54:46.912725"], ["id", 10]]
 (0.4ms)  COMMIT
@@ -209,7 +209,7 @@ Query the number of Objects with a certain status;
 
 `Blog.draft.count`
 
-```
+```ruby
 Blog Load (0.6ms)  SELECT "blogs".* FROM "blogs" WHERE "blogs"."status" = $1  [["status", 0]]
 => 10
 ```
@@ -221,7 +221,7 @@ Blog Load (0.6ms)  SELECT "blogs".* FROM "blogs" WHERE "blogs"."status" = $1  [[
 
 You may wish to organize groups of controllers under a namespace. Most commonly, you might group a number of administrative controllers under an `Admin::` namespace. You would place these controllers under the `app/controllers/admin` directory, and you can group them together in your router:
 
-```
+```ruby
 namespace :admin do
   resources :articles, :comments
 end
@@ -238,20 +238,20 @@ Note that if you do this, you will need to:
 
 If you want to the route to be just `/articles` without the `/admin/` prefix, but still scoped to the `Admin::Articles` controller, use `scope`:
 
-```
+```ruby
 scope module: :admin, do
   resources :articles, :comments
 end
 ```
 
 ... or for a single case:
-```
+```ruby
 resources, :articles, module: :admin
 ```
 
 If you want to route `/admin/articles` to ArticlesController, but without the `Admin::` module prefix, you could use `scope '/admin'`:
 
-```
+```ruby
 scope '/admin' do
   resources :articles
 end
@@ -259,7 +259,7 @@ end
 
 ... or for a single case:
 
-```
+```ruby
 resources :articles, path: '/admin/articles'
 ```
 
@@ -268,7 +268,7 @@ Now we can route any request to `admin/articles` directly to the `articles` cont
 
 ## Nested Resources
 
-```
+```ruby
 resources :magazines do
   resources :ads
 end
@@ -276,11 +276,11 @@ end
 
 This should mirror a `belongs_to` `has_many` relationship in your database, and will provide the following routes:
 
-```
+```ruby
 GET	'/magazines/:magazine_id/ads', to:	'ads#index'
 GET	'/magazines/:magazine_id/ads/:id/edit'	'ads#edit'
 
-// all will route to the ads_controller
+# all will route to the ads_controller
 ```
 
 And will also create url helpers, `magazine_ads_url`, which require an instance of `Magazine` as the first argument: `magazine_ads_url(@magazine)`.
@@ -299,8 +299,8 @@ Add additional actions to a recourse-based route
 ### Example 1
 
 eg: Given you have `resources :photos` in your `routes.rb` file, say you wanted to add a member route to preview a specific photo, that you could call with `preview_photo_path(@photo)`...
-```
-// route to a preview method at GET photo/:id
+```ruby
+# route to a preview method at GET photo/:id
 
 resources :photos do
   member do
@@ -313,7 +313,7 @@ end
 ```
 
 Say you wanted to create a route where you could perform a search on a collection of photos ...
-```
+```ruby
 resources :photos do
   collection do
     get 'search'
@@ -328,7 +328,7 @@ end
 
 Given `resources :user`, say you wanted to define a route that calls a method to toggle status of a user to `:banned`. You would want to access the method at `ban_user_path(@user)`...
 
-```
+```ruby
 resources :users do
   member do
     PUT 'ban'
@@ -340,7 +340,7 @@ end
 
 ... and say you wanted to view a list of banned users
 
-```
+```ruby
 resources :users do
   collection do
     GET 'banned'
@@ -354,13 +354,13 @@ end
 
 Given `resources :foo` in your `routes.rb`, say you wanted to add an additional member route ...
 
-```
+```ruby
 resources :foo do
   member do
-    get 'bar`
+    get 'bar'
   end
 
-  // alternative syntax:
+  # alternative syntax:
   :member => { :bar => :get }`
 end
 
@@ -371,16 +371,16 @@ you'd get an additional route of:
 
 In the same way that RESTful resources for our `FooController` provide a `foo#edit` method for a specific `foo/:id` instance, we now have a new route for exactly the same `food/:id` endpoint, but differentiated by a different controller method:
 
-```
-GET    /foo/:id/edit   # FooController#edit
+```ruby
+GET    '/foo/:id/edit'   # FooController#edit
 
-// new route:
-GET    /foo/:id/bar    # FooController#bar
+# new route:
+GET    '/foo/:id/bar'   # FooController#bar
 ```
 
 Collection routes work the same way, but are applied to a non-specific collection of instances
 
-```
+```ruby
 resources :foo, { :collection => { :buzz => :get } }
 ```
 
@@ -408,19 +408,19 @@ Generate the friendly_id initializer and a new migration:
 
 add a friendly_id slug to Blog:
 
-```
+```ruby
 rails g migration AddSlutToBlog slug:uniq
 rails db:migrate
 
-// blog.rb
-// Configure so that when we save the title for a Blog, friendly_id will create a slug for us automatically.
+# blog.rb
+# Configure so that when we save the title for a Blog, friendly_id will create a slug for us automatically.
 
 class User
   extend FriendlyId
   friendly_id title:, use: :slugged
 end
 
-// blogs_controller.rb
+# blogs_controller.rb
 
 def BlogsController < ApplicationController
   def set_blog
@@ -441,7 +441,7 @@ __Do no secure confidential data in sessions, they are not secure!!!__
 
 For example, if you could retrieve a referrer id from a query string and use that in your app:
 
-```
+```ruby
 # application_controller
 before_action :set_referrer
 
@@ -449,7 +449,7 @@ def set_referrer
   session[referrer] = params[:src]
 end
 ```
-```
+```ruby
 # application.html.erb
 <%= yield %>
 
@@ -523,10 +523,10 @@ Cons:
 
 => Consider using polymorphic associations if two subclasses need to have their own separate database tables.
 
-```
+```ruby
 rails g migration Company name type
 ```
-```
+```ruby
 class ApplicationRecord < ActiveRecord::Base; end
 
 class Company < ApplicationRecord; end
@@ -534,7 +534,7 @@ class Company < ApplicationRecord; end
 class Firm < Company; end
 ```
 
-```
+```ruby
 Firm.table_name
 Company.table_name
 => 'companies'
@@ -549,7 +549,7 @@ Firm.inheritance_column
 
 The base class will be instantiated with `type` set to `nil`. When a subclass is instanciated however, its `type` will be set to the name of the subclass.
 
-```
+```ruby
 Company.new.changed?
 => false
 
@@ -558,7 +558,6 @@ Firm.new.changed?
 
 Firm.new.changes
 => {"type"=>[nil, "Firm"]}
-
 ```
 
 ### Polymorphic association
@@ -575,7 +574,7 @@ Consider Facebook `Group` and `Person` classes. Both Models are not related, exc
 
 Both can have `Posts`. Once could try to create two separate `has_many` associations
 
-```
+```ruby
 class Post belongs_to :group belongs_to :person; end
 
 class Group has_may :posts; end
@@ -586,7 +585,7 @@ If we wanted to find out who owned a particular post, we would have two competin
 
 A polymorphic association condenses the functionality into a single association `postable`, which both `User` and `Person` can share:
 
-```
+```ruby
 class Post belongs_to :postable, polymorphic: true; end
 
 class Group has_many :posts, as :postable; end
@@ -607,7 +606,7 @@ Using an abstract class implies that it's data is not persistent and that its pu
 
 If a block is provided, `create` and `new` will yield the new object to the block for initialization:
 
-```
+```ruby
 User.new do |u|
   u.name = 'Josh'
   u.age = 24
@@ -623,7 +622,7 @@ Will collect multiple subsequent queries into a single query. One way of thinkin
 
 For example, say you have `Author`, `Book` and `Genre` models.
 
-```
+```ruby
 @books = Book.all
 
 @books.each do |book|
@@ -642,7 +641,7 @@ If you have 3 books, then you will make 7 database queries, one initial query to
 
 Using `.includes` allows you to make one query for each table, then each subsequent query uses the data from that initial query, meaning that the total number of queries will be the same, no matter how many `books` there are in the database (ie: the number of repetitions in the for loop).
 
-```
+```ruby
 @books = Books.includes(:author, :genre)
 ```
 
@@ -661,7 +660,7 @@ Runs after an Active Record Object is instantiated, eg: when `Model.new` is call
 
 eg:
 
-```
+```ruby
 class User
   after_initialize :set_defaults
 
@@ -695,7 +694,7 @@ Therefore __we should have a Topic reference on Blog Post__.
 
 `Rails g migration AddTopicsToBlogs topic:references` => ( Add to Blogs the TopicId )
 
-```
+```ruby
 def change
   add_reference :blogs, :topic, foreign_key: true
 end
@@ -709,13 +708,13 @@ If two tables share a common association, eg: an `Author` has `:books`, and a `G
 
 Therefore:
 
-```
+```ruby
 # author.rb
 
 has_many :books, inverse_of :author
 has_many :genres, through: :books
 ```
-```
+```ruby
 # genre.rb
 
 has_many :books, inverse_of :genre
@@ -723,26 +722,26 @@ has_many :authors, through: :books
 ```
 
 Now we can call:
-```
+```ruby
 author.genres
 genre.authors
 ```
 
 We can also create a join table where we want straight many-to-many relationships:
 
-```
+```ruby
 # user.rb
 
 has_many :user_skills, inverse_of :user
 has_many :skills, through: :user_skills
 ```
-```
+```ruby
 # skill.rb
 
 has_many :user_skills, inverse_of: :skill
 has_many :users, through: :user_skills
 ```
-```
+```ruby
 # user_skill.rb
 
 belongs_to :user, inverse_of: :user_skills
@@ -755,7 +754,7 @@ Benefit: You should try to keep all the logic for your Models in the Model file,
 
 #### Option 1: Create a Model class method
 
-```
+```ruby
 class Person
   def self.boys
     where(gender: 'male')
@@ -767,7 +766,7 @@ end
 
 #### Option 2: Define a Scope
 
-```
+```ruby
 scope :ruby_on_rails -> { where(topic: 'Ruby on rails') }
 
 => can call with `Blog.ruby_on_rails`
@@ -785,11 +784,11 @@ The `included do` hook is called when you `include Module` into a class, even be
 
 <!-- https://stackoverflow.com/questions/28009772/ruby-modules-included-do-end-block -->
 
-```
+```ruby
 module MyModule
   extend ActiveSupport::Concern
 
-  // when someone includes this module, it will have these two methods exposed as instance methods
+  # when someone includes this module, it will have these two methods exposed as instance methods
 
   def first_method
   end
@@ -797,17 +796,17 @@ module MyModule
   def second_method
   end
 
-  // ... this included hook will be called
+  # ... this included hook will be called
 
   included do
-    // ... and this method will be executed
+    # ... and this method will be executed
 
     second_class_method
   end
 
   module ClassMethods
-    // ... and these two methods exposed as class methods
-    // ... these class methods will be mixed as class methods of the Class this module is included in
+    # ... and these two methods exposed as class methods
+    # ... these class methods will be mixed as class methods of the Class this module is included in
 
     def first_class_method
     end
@@ -824,7 +823,7 @@ end
 
 The methods of `ClassMethods` are automatically mixed as class methods of `MyClass`. This is a common Ruby pattern, that `ActiveSupport::Concern` encapsulates. The non-Rails Ruby code is...
 
-```
+```ruby
 module MyModule
   def self.included(base)
     base.extend ClassMethods
@@ -835,14 +834,13 @@ module MyModule
     end
   end
 end
-
 ```
 
 ...Therefore you can call `MyClass.first_class_method`
 
 The `included do` hook is effectively the following code:
 
-```
+```ruby
 # non-Rails version
 module MyModule
   def self.included(base)
@@ -862,7 +860,7 @@ end
 
 ### Controller Concerns: Add before_filter devise params sanitizer:
 
-```
+```ruby
 # controllers/concerns/devise_whitelist.rb
 
 module DeviseWhitelist
@@ -879,7 +877,7 @@ module DeviseWhitelist
   emd
 end
 ```
-```
+```ruby
 # application_controller.rb
 ```
 
@@ -890,7 +888,7 @@ Refers to a way to save attributes on associated models __through__ the parent m
 
 Consider the following relation:
 
-```
+```ruby
 class User
   has_one :avatar
   accepts_nested_attributes_for :avatar
@@ -899,7 +897,7 @@ end
 
 You can save attributes (ie: create new instances of both Objects) trough nested attributes:
 
-```
+```ruby
 params = { user: { name: "Josh", avatar_attributes: { image: "image.png"}}}
 User.create(params['user'])
 ```
@@ -908,14 +906,14 @@ Active record may have trouble recognising the inverse model associations, in wh
 
 ### `reject_if` validation
 
-```
+```ruby
 class Member
   has_many :posts, inverse_of: :member
   accepts_nested_attributes_for :posts, reject_if proc: {|attrs| attrs['title'].blank? }
 end
 ```
 ```
-// when creating multiple nested attributes, pass an array of hashes:
+# when creating multiple nested attributes, pass an array of hashes:
 
 params = { member: { name: "Josh", posts_attributes: [
   title: 'Some Title',
@@ -923,7 +921,7 @@ params = { member: { name: "Josh", posts_attributes: [
   title: ''
 ]}}
 ```
-```
+```ruby
 new_member = Member.create(params['member'])
 
 new_member.posts.count
@@ -932,7 +930,7 @@ new_member.posts.count
 
 ### Strong params with `nested_attributes_for`
 
-```
+```ruby
 def portfolio_params
   params.require(:portfolio).permit(:title, :subtitle, :body, technologies_attributes: [:name])
 end
@@ -952,7 +950,7 @@ end
 
 ### Customise routes
 
-```
+```ruby
 devise_for :users, path: '', path_names: { sign_in: 'login', sign_up: 'register', sign_out: 'logout' }
 ```
 
@@ -995,12 +993,12 @@ Use a CDN:
 
 You can define and render a `@page_tite` in your `layouts/application.html.erb` file, and override it depending on the controller method:
 
-```
+```ruby
 # layouts/application.html.erb
 
 <title><%= @page_title %></title>
 ```
-```
+```ruby
 # blogs_controller.rb
 
 def show
@@ -1010,7 +1008,7 @@ end
 
 ### Meta SEO keywords
 
-```
+```ruby
 <meta name="keywords" content="my keywords here" />
 ```
 
@@ -1020,19 +1018,19 @@ end
 
 You can pass an object / data to a partial locally (using 'locals'), since the partial is rendered by the view itself.
 
-```
+```ruby
 # blogs_controller
 
 def new
   @blog = Blog.new
 end
 ```
-```
+```ruby
 # views/blogs/new.html.erb
 
 <%= render 'shared/form', blog: @blog %>
 ```
-```
+```ruby
 # views/shared/_form.html.erb
 
 <%= form_for(blog) do |f| %>
@@ -1040,12 +1038,12 @@ end
 
 You can also dynamically create classes using locals. For example, pass in the top/bottom location of a navbar to different layout files:
 
-```
+```ruby
 # application.html.erb
 
 <%= render 'nav', location: 'page-top' %>
 ```
-```
+```ruby
 # _nav.html.erb
 
 <div class="<%= location %>">Navbar</div>
@@ -1058,19 +1056,19 @@ Rails can render collections by default if you follow this convention:
 - Create a partial named after the singular of the collection
 - Must match the name of the controller / model
 
-```
+```ruby
 # blogs/index.html.erb
 
 <%= render @blogs %>
 ```
-```
+```ruby
 # blogs/_blog.html.erb
 
 <%= blog.title %>
 <%= blog.subtitle %>
 <%= blog.body %>
 ```
-```
+```ruby
 # blogs_controller
 
 def index
@@ -1084,19 +1082,19 @@ Since Rails maps partials to the current directory, the collection & model name,
 If you want to render a collection that doesn't follow that convention you have pass in custom options:
 
 For example, if you have Model `Portfolio`, and you are rendering `@portfolio_items`:
-```
+```ruby
 # portfolios_controller
 
 def index
   @portfolio_items = Portfolio.all
 end
 ```
-```
+```ruby
 # portfolios/index.html.erb
 
 <%= render partial: 'portfolio_item', collection: @portfolio_items %>
 ```
-```
+```ruby
 # _portfolio_item.html.erb
 
 <%= portfolio_item.title %>
@@ -1117,7 +1115,7 @@ As a rule of thumb, extract HTML to partials, ruby logic (case statements etc) t
 
 ### Basic view helper
 
-```
+```ruby
 # app/helpers/application_helper.rb
 
 def login_helper
@@ -1132,7 +1130,7 @@ end
 ### Pass CSS classes into view helper
 
 Very useful if you want to reuse a helper in multiple places, but with different syling. For example, styling navigation links differently:
-```
+```ruby
 # application_helper.rb
 
 def nav_links_helper(style)
@@ -1140,14 +1138,14 @@ def nav_links_helper(style)
   <%= link_to 'Registor', new_user_registration_path, class: style>
 end
 ```
-```
+```ruby
 # application.html.erb
 <%= nav_links_helper('header-nav') %>
 
 # _footer.html.erb
 <%= nav_links_helper('footer-nav') %>
 ```
-```
+```ruby
 # application_hmtl.erb
 
 <%= login_helper %>
@@ -1159,7 +1157,7 @@ end
 
 You can pass in an argument (from the view page) for additional configuration.
 
-```
+```ruby
 # application_helper.rb
 
 def source_helper(page)
@@ -1168,7 +1166,7 @@ def source_helper(page)
 end
 ```
 
-```
+```ruby
 # application.html.erb
 
 <%= source_helper("main") %>
@@ -1182,12 +1180,12 @@ Will not be applied to the last item in the collection.
 
 This only works if you define `partial: @blogs`.
 
-```
+```ruby
 # blogs/index.html.erb
 
 <%= render partial: @blogs, spacing_template: 'blog_ruler' %>
 ```
-```
+```ruby
 # blog_ruler.html.erb
 
 <hr class="blog-spacing">
@@ -1200,7 +1198,7 @@ This only works if you define `partial: @blogs`.
 Will cache html, css, assets on the client browser side to speed up subsequent rendering.
 Do not use caching if you need the client to be able to update the page and see different data.
 
-```
+```ruby
 <% cache do %>
   <div><%= render @blogs %></div>
 <% end %>
@@ -1276,7 +1274,7 @@ Good for communicating with external APIs, parsing retrieved data, then making t
 Comparable to building out Gems and integrating those with your app.
 
 ### Load modules in lib directory
-```
+```ruby
 # application.rb
 
 module MyAppName
@@ -1288,7 +1286,7 @@ end
 
 ## Module structure
 
-```
+```ruby
 # module_name.rb
 
 module ModuleName
@@ -1299,7 +1297,7 @@ end
 ```
 Module is now available in app:
 
-```
+```ruby
 # my_controller.rb
 
 class MyController < ApplicationController
