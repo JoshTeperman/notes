@@ -1353,13 +1353,31 @@ In the `application.js` file you will find `//= require` directives to load Java
 
 Starting with Rails 6, Webpacker is the default asset compiler for Rails and uses Webpack, these days the defacto tool for bundling Javascript assets for usage in a browser.
 
-Webpacker also bundles Javascript assets to an `application.js` file, but in this case in `app/javascripts/packs/` directory.
+#### Default directory
+
+Webpacker also bundles Javascript assets to an `application.js` file. The default directory Webpack compiles from is `app/javascripts/packs/*`, but this can be configured by whatever is assigned to `source_entry_path` in the `webpacker.yml` config file.
 
 Webpack will look for `node_modules` for required Javascript files by default. You can require them directly in the `application.js` file, or (preferred option) create an entry point and include your Javascript code in a Rails layout as a Javascript pack.
 
+#### Adding additional resolved paths
+
+If you would like to share additional Javascript with Webpack modules, you can configure:
+
+```Javascript
+// config/webpack.yml
+
+resolved_paths: ['app/assets']
+```
+These assets will now be available for importing into your modules:
+```Javascript
+// relative to parent directory 'app/assets'
+
+import 'stylesheets/main'
+```
+
 ### `javascript_pack_tag`
 
-`#javascript_pack_tag(*names, **options) ⇒ Object
+`#javascript_pack_tag(*names, **options) ⇒ Object`
 
 Creates a script tag that references the named pack file, as compiled by webpack per the entries list in `config/webpack/shared.js`. By default, this list is auto-generated to match everything in `app/javascript/packs/*.js`. In production mode, the digested reference is automatically looked up.`
 
@@ -1402,6 +1420,22 @@ Part of  `ActionView::Helpers::AssetTagHelper` module.
 Returns an HTML `<script>` tag for each of the sources provided. Relative paths are assumed to be relative to `javascripts/packs` or `javascripts/assets` dependin on the Rails version.
 
 You can have multiple `include_tags` in the same layout.
+
+### Import as a Javascript module
+
+Rather than using script tags, you can require your code with a module.
+
+```Javascript
+// javascripts/custom/index.js
+
+import $ from 'jquery'
+```
+```Javascript
+// application.js
+
+require('custom')
+// or use ES6 => import custom from 'custom'
+```
 
 
 
