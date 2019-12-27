@@ -274,7 +274,7 @@ resources :magazines do
 end
 ```
 
-This should mirror a `belongs_to` `has_many` relationship in your database, and will provide the following routes:
+This should mirror a `belongs_to` `has_many` relationship in your database, and will allow for RESTful routes in the following style:
 
 ```ruby
 GET	'/magazines/:magazine_id/ads', to:	'ads#index'
@@ -873,8 +873,8 @@ module DeviseWhitelist
   private
 
   def configure_permitted_params
-    devise_paramaeter_sanitizer.permit(:sign_up, keys: [:name])
-  emd
+    devise_parameter_sanitizer.permit(:sign_up, keys: [:name])
+  end
 end
 ```
 ```ruby
@@ -953,6 +953,10 @@ end
 ```ruby
 devise_for :users, path: '', path_names: { sign_in: 'login', sign_up: 'register', sign_out: 'logout' }
 ```
+
+### Customise views
+
+`rails generate devise:views`
 
 # Forms
 
@@ -1123,7 +1127,7 @@ def login_helper
     link_to 'Logout', destroy_user_session_path, method: :delete
   else
     link_to 'Register', new_user_registration_path
-      link_to 'Login', new_user_session_path
+    link_to 'Login', new_user_session_path
     <% end %>
 end
 ```
@@ -1134,8 +1138,8 @@ Very useful if you want to reuse a helper in multiple places, but with different
 # application_helper.rb
 
 def nav_links_helper(style)
-  <%= link_to 'Login', new_user_session_path, class: style>
-  <%= link_to 'Registor', new_user_registration_path, class: style>
+  link_to 'Login', new_user_session_path, class: style
+  link_to 'Registor', new_user_registration_path, class: style
 end
 ```
 ```ruby
@@ -1191,18 +1195,42 @@ This only works if you define `partial: @blogs`.
 <hr class="blog-spacing">
 ```
 
-## Other
-
-### cache do
+### `cache do`
 
 Will cache html, css, assets on the client browser side to speed up subsequent rendering.
 Do not use caching if you need the client to be able to update the page and see different data.
 
-```ruby
+```Ruby
 <% cache do %>
   <div><%= render @blogs %></div>
 <% end %>
 ```
+
+### `content_for`
+
+ `content_for(name, content = nil, options = {}, &block) public`
+
+ Calling `content_for` stores a block of markup in an identifier(`name`) for later use. In order to access this stored content in other templates, helper modules or the layout, you would pass the identifier as an argument to `content_for`.
+
+ This is equivalent to using `yield`. To render content into a named `yield`, you use the `content_for` method.
+
+```ruby
+# application.html.erb
+
+<%= yield :not_authorized if current_user.nil? %>
+<%= yield :page_title %>
+<%= content_for :content_from_block %>
+<%= content_for :content_from_hash %>
+```
+```ruby
+# index.html.erb
+
+<%= content_for :not_authorized, 'You are unauthorized' %>
+<%= content_for :page_title { <title>Page Title</title> }
+<%= content_for :content_from_block { This is yielded content } %>
+<%= content_for :content_from_hash, 'This is the content' %>
+```
+
 
 ### Tweet Link Regex Helper
 ```ruby
@@ -1306,4 +1334,75 @@ class MyController < ApplicationController
   end
 end
 ```
+
+# Javascript and CSS Assets in Rails
+
+One of Rails *opinions* about Javascript and CSS assets is that they  should be collated into a single files `application-{hash}.js` & `application-{hash}.css` and served to the client. This is to minimize the number of calls the client makes to the server. There should only be three; one for HTML, one for CSS, and one for Javascript (excluding images.)
+
+## Javascript Asset Pipeline
+
+By default Rails packs all Javascript assets and injects them into the `application.html.erb` layout file using a `javascript_pack_tag`.
+
+### Default asset Pipeline before Rails 6
+
+The `application.js` file is in the `app/assets/javascripts/` directory, uses the sprockets Gem to compile all of the Javascript files.
+
+In the `application.js` file you will find `//= require` directives to load Javascript assets into the current file followed by the `//= require_tree .` directive which recursively loads all directories and files into the current file.
+
+### Rails 6
+
+Starting with Rails 6, Webpacker is the default asset compiler for Rails and uses Webpack, these days the defacto tool for bundling Javascript assets for usage in a browser.
+
+Webpacker also bundles Javascript assets to an `application.js` file, but in this case in `app/javascripts/packs/` directory.
+
+Webpack will look for `node_modules` for required Javascript files by default. You can require them directly in the `application.js` file, or (preferred option) create an entry point and include your Javascript code in a Rails layout as a Javascript pack.
+
+### `javascript_pack_tag`
+
+`#javascript_pack_tag(*names, **options) ⇒ Object
+
+Creates a script tag that references the named pack file, as compiled by webpack per the entries list in `config/webpack/shared.js`. By default, this list is auto-generated to match everything in `app/javascript/packs/*.js`. In production mode, the digested reference is automatically looked up.`
+
+```Javascript
+// javascript/packs/custom.js
+
+import $ from 'jquery
+```
+```Javascript
+// layouts/custom.html.erb
+
+<%= javascript_pack_tag 'custom', data-turbolinks-track: 'reload' %>
+
+// results in:
+<script src="/packs/custom-1016838bab065ae1e314.js" data-turbolinks-track="reload"></script>
+```
+
+Alternatively, you can have separate pack tags for each controller:
+
+```Ruby
+<%= javascript_pack_tag "#{controller_name}/#{action_name}"%>
+```
+
+Or specify the pack tag within each view:
+
+```Ruby
+# application.html.erb
+<%= yield :javascript_packs %>
+
+# custom_controller.rb
+<%= content_for :javascript_packs do %>
+  <%= javascript_pack_tag 'custom' %>
+<% end %>
+```
+
+### `javascript_include_tag`
+
+Part of  `ActionView::Helpers::AssetTagHelper` module.
+
+Returns an HTML `<script>` tag for each of the sources provided. Relative paths are assumed to be relative to `javascripts/packs` or `javascripts/assets` dependin on the Rails version.
+
+You can have multiple `include_tags` in the same layout.
+
+
+
 
