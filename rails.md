@@ -68,153 +68,6 @@ module AppName
 end
 ```
 
-# Coding in Rails
-Use `before_action` to set current model for each controller method from params
-
-```ruby
-class BlogsController > ApplicationController
-  before_action :set_blog, only: [:show]
-
-  def show
-  end
-
-  private
-
-  def set_blog
-    @blog = Blog.find(params[:id])
-  end
-end
-```
-
-`redirect_to @blog` will redirect to @blog's `show` page, or `blog_path(@blog)`
-
-
-
-## Model callbacks
-
-### `before_action`
-
-Use `before_action` to set current model for each controller method from params
-
-```ruby
-class BlogsController > ApplicationController
-  before_action :set_blog, only: [:show]
-
-  def show
-  end
-
-  private
-
-  def set_blog
-    @blog ||= Blog.find(params[:id])
-  end
-end
-```
-
-### `redirect_to`
-`redirect_to @blog` will redirect to @blog's `show` page, or `blog_path(@blog)`
-
----
-
-### url(absolute) & path(relative)
-
-`link_to, 'something', something_path` => `/something`
-
-`link_to, 'something', something_url` => `http://localhost:3000/something`
-
-Rails path helper module: `Rails.application.routes.url_helpers`
----
-
-### delete & destroy
-
-Delete will remove the item row in the database and no callbacks will be run.
-
-Destroy will attempt to remove the item, but there are a bunch of callbacks associated with the method. If the `before_destroy` callback throws `:abort` then the action is cancelled and `destroy` returns `false`.
-
-To use delete, pass in the resource path, eg `blog_path`, with the resource as an argument a hash of options that specify the verb `delete`.
-
-Eg: to create a link to delete a blog post:
-
-```ruby
-<%= link_to 'Delete Post', post_path(@post), method: :delete, data: { confirm: 'Are you sure? } %>
-```
----
-
-### respond_to, respond
-
-Describes what you want to happen after previous action.
-
-```ruby
-@blog.destroy
-
-respond_to do |format|
-  # respond in different formats
-  format.html { redirect_to home_url, notice: 'Blog was destroyed'}
-  format.json { key: value }
-end
-```
-
----
-
-## Enums
-
-Elegent way to manage changes in state
-
-Create a `status` Enum for `Blog` model.
-
-Going to need a `status` attribute, that will be an Integer, and a default value.
-
-```ruby
-rails g migration add_post_status_to_blogs status:integer
-
-def change
-  add_colunn :blogs, :status, :integer, default: 0
-end
-
-rails db:migrate
-```
-
-Create Enum:
-
-```ruby
-# blog.rb
-
-enum status: {
-  draft: 0,
-  published: 1
-}
-```
-
-This gives you access to some useful functionality:
-
-Firstly, you can see that querying a Blog instance shows the Enum value for it's status:
-
-`Blog.last => #<Blog id: 10, title: "My Blog Post 9", slug: "my-blog-post-9", status: "draft">`
-
-`Blog.last.status => "draft"`
-
-Query the Enum and return a boolean:
-
-`Blog.last.draft? => true`\
-
-Update the Enum with a bang method:
-
-`Blog.last.published!`
-```ruby
-(0.2ms)  BEGIN
-  SQL (9.2ms)  UPDATE "blogs" SET "status" = $1, "updated_at" = $2 WHERE "blogs"."id" = $3  [["status", 0], ["updated_at", "2019-12-01 00:54:46.912725"], ["id", 10]]
-(0.4ms)  COMMIT
-```
-Query the number of Objects with a certain status;
-
-`Blog.draft.count`
-
-```ruby
-Blog Load (0.6ms)  SELECT "blogs".* FROM "blogs" WHERE "blogs"."status" = $1  [["status", 0]]
-=> 10
-```
-
-
 # Controllers & Routes
 
 ## Namespace & Scope
@@ -1437,6 +1290,267 @@ require('custom')
 // or use ES6 => import custom from 'custom'
 ```
 
+# Misc: Coding in Rails
+Use `before_action` to set current model for each controller method from params
 
+```ruby
+class BlogsController > ApplicationController
+  before_action :set_blog, only: [:show]
+
+  def show
+  end
+
+  private
+
+  def set_blog
+    @blog = Blog.find(params[:id])
+  end
+end
+```
+
+`redirect_to @blog` will redirect to @blog's `show` page, or `blog_path(@blog)`
+
+## Model callbacks
+
+### `before_action`
+
+Use `before_action` to set current model for each controller method from params
+
+```ruby
+class BlogsController > ApplicationController
+  before_action :set_blog, only: [:show]
+
+  def show
+  end
+
+  private
+
+  def set_blog
+    @blog ||= Blog.find(params[:id])
+  end
+end
+```
+
+### `redirect_to`
+`redirect_to @blog` will redirect to @blog's `show` page, or `blog_path(@blog)`
+
+---
+
+### url(absolute) & path(relative)
+
+`link_to, 'something', something_path` => `/something`
+
+`link_to, 'something', something_url` => `http://localhost:3000/something`
+
+Rails path helper module: `Rails.application.routes.url_helpers`
+---
+
+### delete & destroy
+
+Delete will remove the item row in the database and no callbacks will be run.
+
+Destroy will attempt to remove the item, but there are a bunch of callbacks associated with the method. If the `before_destroy` callback throws `:abort` then the action is cancelled and `destroy` returns `false`.
+
+To use delete, pass in the resource path, eg `blog_path`, with the resource as an argument a hash of options that specify the verb `delete`.
+
+Eg: to create a link to delete a blog post:
+
+```ruby
+<%= link_to 'Delete Post', post_path(@post), method: :delete, data: { confirm: 'Are you sure? } %>
+```
+---
+
+### respond_to, respond
+
+Describes what you want to happen after previous action.
+
+```ruby
+@blog.destroy
+
+respond_to do |format|
+  # respond in different formats
+  format.html { redirect_to home_url, notice: 'Blog was destroyed'}
+  format.json { key: value }
+end
+```
+
+---
+
+## Enums
+
+Elegent way to manage changes in state
+
+Create a `status` Enum for `Blog` model.
+
+Going to need a `status` attribute, that will be an Integer, and a default value.
+
+```ruby
+rails g migration add_post_status_to_blogs status:integer
+
+def change
+  add_colunn :blogs, :status, :integer, default: 0
+end
+
+rails db:migrate
+```
+
+Create Enum:
+
+```ruby
+# blog.rb
+
+enum status: {
+  draft: 0,
+  published: 1
+}
+```
+
+This gives you access to some useful functionality:
+
+Firstly, you can see that querying a Blog instance shows the Enum value for it's status:
+
+`Blog.last => #<Blog id: 10, title: "My Blog Post 9", slug: "my-blog-post-9", status: "draft">`
+
+`Blog.last.status => "draft"`
+
+Query the Enum and return a boolean:
+
+`Blog.last.draft? => true`\
+
+Update the Enum with a bang method:
+
+`Blog.last.published!`
+```ruby
+(0.2ms)  BEGIN
+  SQL (9.2ms)  UPDATE "blogs" SET "status" = $1, "updated_at" = $2 WHERE "blogs"."id" = $3  [["status", 0], ["updated_at", "2019-12-01 00:54:46.912725"], ["id", 10]]
+(0.4ms)  COMMIT
+```
+Query the number of Objects with a certain status;
+
+`Blog.draft.count`
+
+```ruby
+Blog Load (0.6ms)  SELECT "blogs".* FROM "blogs" WHERE "blogs"."status" = $1  [["status", 0]]
+=> 10
+```
+
+## Rails `delegate` & the Ruby `Forwardable` Module
+
+https://www.rubyguides.com/2018/10/delegate-methods-in-ruby/
+
+### `Forwardable` and `def_delegators`
+
+The `Forwardable` Module in Ruby allows you to compose Objects by delegating tasks to other objects. Forwarding responsibility for a method call to another object allows the first object access to logic held in other classes. This is an alternative to the Inheritance Pattern.
+
+`def_delegators(accessor, *methods)`<br>
+`def_delegator(accessor, *methods, alias = method)`
+
+This allows you to define `method` as an instance method with an optional alias. Calls to `method` will be delegated to `accessor.method`.
+
+Typically, to call the instance method of another class, you would have to create an accessor:
+
+```ruby
+class Computer
+  def initialize
+    @memory = Memory.new
+  end
+
+  def write(data)
+    @memory.write(data)
+  end
+end
+```
+This would allow `Computer` class to write data to the `Memory` class by delegating responsibility to `Memory.write`. The `Forwardable` Module allows a shortcut to this:
+
+```ruby
+require 'forwardable'
+
+class Computer
+  extend Forwardable
+
+  def_delegators(@memory, :write)
+
+  def initialize
+    @memory = Memory.new
+  end
+
+end
+```
+
+### The Rails `delegate` method
+
+Rails `ActiveSupport` comes with a `delegate` method with the same functionality.
+
+`delegate(*methods, to: nil, prefix: nil, allow_nil: nil) public`
+
+`:to` - Specifies the target object<br>
+`:prefix` - Prefixes the new method with the target name or a custom prefix<br>
+`:allow_nil` - if set to true, prevents a +Module::DelegationError+ from being raised<br>
+
+Delegate `method` to `*target` will expose a `*target` object's public methods as your own. As a result, `self.method` will call `Objects` public `method` on `self`.
+
+Methods can be delegated to instance variables, class variables, or constants.
+
+```ruby
+class Calculator
+  CONSTANT_ARRAY =  [0, 1, 2, 3]
+  @@class_array = [4, 5, 6, 7]
+
+  def initialize
+    @instance_array = [8, 9, 10, 11]
+  end
+
+  delegate :sum, to: CONSTANT_ARRAY
+  delegate :min, to: @@class_array
+  delegate :max, to: @instance_array
+end
+
+Calculator.new.sum # => 6
+Calculator.new.min # => 4
+Calculator.new.max # => 11
+```
+`Calculator` is `self`, `sum` is being delegated to `CONSTANT_ARRAY`'s public `Array.sum` method. This is the same as saying:
+
+```ruby
+  class Calculator
+    CONSTANT_ARRAY = [0, 1, 2, 3]
+    def sum
+      CONSTANT_ARRAY.sum
+    end
+  end
+```
+
+This is particularly useful with Active Record associations, where methods can be delegated to an associated `Object`.
+```ruby
+class Greeter < ApplicationRecord
+  def hello
+    return 'hello'
+  end
+
+  def goodbye
+    return 'goodbye'
+  end
+end
+
+class Delegator < ApplicationRecord
+  belongs_to :greeter
+  delegate :hello, to: :greeter
+end
+
+Delegator.new.hello # => 'hello'
+Delegator.new.goodbye # => NoMethodError: undefined method `goodbye' for #<Foo:0x1af30c>
+```
+
+In this case, `self.hello` method is delegated to the associated `:greeter` Object. Therefore we could rewrite this as:
+
+```ruby
+  class Delegator < ApplicationRecord
+    belongs_to :greeter
+
+    def hello
+      greeter.hello
+    end
+  end
+```
 
 
