@@ -1,0 +1,154 @@
+GIT PULL FOR CODEACADEMY CHALLENGES
+*** Pull from Git-Hub every day to see what changes have been made to git repo while you were away. 
+- Go to folder (morning challenges)
+- git pull
+
+*** Clone if folder not cloned yet (copy url)
+- git clone (url ... .git) /foldername (eg morning-challenges) will clone into morning challenges
+
+*** If you move a file into git repository local folder that hasn't been added to github:
+- git status (will read .git file to tell you of changes )
+- if untracked file:
+- git add . (add all files that have changed)
+- git commit -m "message"
+
+
+WORKFLOW
+*** Create new repository: 
+- new
+- name
+- description
+- create repository * will create ONLY on GitHub, not on your machine. 
+- copy url
+- go to folder (in terminal) on your machine where you want to clone the repo (will create a new folder for you)
+- git clone url (eg=git@github.com)
+=> will create a local folder, and populate all files, including a hidden .git file which tracks all changes locally on your machine.
+
+*** if from your local machine:
+cd /foldername
+git init => initialized empty git repo (and creates a .git file for you) 
+... and check next steps on github ()
+
+*** Pull request "Hey check out my code"
+=> request colleagues look at new feature etc on branched codebase
+- create a branch
+- commit (for any meaningful change - save state / bookmark)
+=> create a transparent history of your work that everyone can follow
+- new pull request for recent commits (discuss and review your code)
+- if approved, merge back into master
+=> everyone works on the same base code simultaneously, with separate branches that can all be merged
+=> can occur at any time during branch 
+=> can be approved but not merged
+
+eg:
+git branch
+git checkout b1 (moving into branch b1, so future commits will not be on production code)
+git commit
+git commit 
+git merge b0
+git checkout master (move you back to b0 so you can view the code you committed / merged to master)
+
+- git checkout -b my-work 
+=> create a branch called my-work, first time only is necessary
+- git checkout -my-work
+=> work within my branch of master repository
+- git pull (within local master)
+- git checkout -my-work
+- git merge master
+=> SHOULD update my brank -my-work with whatever new pull of the day
+
+
+* First time pushing to a repo, need to set default upstream origin:
+=> git push --set-upstream origin adding-canvas-link
+
+
+ADAM's GUIDE
+
+f you're struggling with using Git for the morning challenges, follow my guide below!
+
+** GITHUB MORNING CHALLENGES TUTORIAL **
+
+NB.   YOU ARE NOT ALLOWED TO COPY AND PASTE THE COMMANDS. YOU'RE ONLY ALLOWED TO TYPE THEM YOURSELF :wink: Get into the habbit :stuck_out_tongue:
+
+
+1. In order to set up the git on your computer, do the following: 
+```git clone https://www.github.com/CoderAcademyEdu/mel-morning-challenges19.git```
+
+2. Set the URL of the github to the alias Origin using the following command:
+```git remote add origin https://www.github.com/CoderAcademyEdu/mel-morning-challenges19.git```
+
+3. CD into the new directory that was created
+
+4. Create a new branch called "my_work" (or something similar) using: 
+```git branch my_work```
+
+5. To list your current branches, type
+```git branch```
+
+NB. If you have done step 3 correctly, it should show:
+ 
+```* master
+     my_work```
+
+5. Every morning when a new morning challenge is posted, make sure you are in the branch master by running
+```git branch```
+
+and ensure that "master" has the "*" asterisk beside it (the asterisk shows you what branch you are currently in)
+
+IF MASTER DOES NOT HAVE AN ASTERISK "*" BESIDE IT:
+run:
+```git checkout master```
+
+6. Pull the latest files from the github by running: 
+```git pull origin master```
+
+NB. You will NOT be editing files in the "master" branch
+
+7. Switch to your my_work branch using: 
+```git checkout my_work```
+
+8. Make sure you are in my_work by running:
+```git branch```
+
+  (MAKE SURE THAT THE ASTERISK "*" IS NEXT TO YOUR my_work BRANCH!)
+
+eg.
+   ```master 
+ * my_work```
+
+9. Merge all the new files that were obtained in master, with your my_work branch using: 
+```git merge master```
+
+10. Edit the files to your heart's content!
+
+11. Every morning repeat steps 4 - 9!
+
+FOLLOW THE NEXT SECTION AFTER YOU HAVE EDITED YOUR FILES IN YOUR my_work BRANCH!!
+
+12. After editing your files, add them to the commit staging area by running: 
+```git add -A``` 
+
+13. Commit your current changes to the branch by running: 
+```git commit -m "TYPE ANY MESSAGE YOU WANT HERE!"```
+
+14. The changes are now saved to your my_work branch. If you switch to the master branch (by following step 5) and open a file, you will see that the files are the original that was pulled from the github
+
+
+OTHER
+
+** git config --global core.editor "code --wait"
+=> Should allow you to make a commit without m and opens VScode as default editor rather than vim.
+
+
+Checkout past Commits:
+
+  1) git reset --hard <commit#>
+  2) git log
+  - copy commitID
+  - git checkout commitID
+  - git checkout -b 'workingonoldcode'
+  - git checkout master => takes you back to current code
+
+Remove a specific file from being tracked:
+
+git rm --cached foo.txt

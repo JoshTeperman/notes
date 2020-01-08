@@ -1,0 +1,35 @@
+Authenticating SSH Hash
+
+#Step One: 
+mkdir -p ~/.ssh && ssh-keygen -t ed25519 -o -a 100 -f ~/.ssh/id_ed25519 -C "TYPE_YOUR_EMAIL@HERE.com"
+#Step Two: 
+cat ~/.ssh/id_ed25519.pub
+#Step Three: 
+github.com/settings/ssh
+#Step Four: 
+ssh -T git@github.com
+#Step Five: 
+#you should see something like this: 
+# Hi --------! You've successfully authenticated, but GitHub does not provide shell access
+# Step Six (If you didnt see the above output): 
+ssh-add ~/.ssh/id_ed25519 
+
+
+josh$ cat ~/.ssh/id_ed25519.pub =>
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIERMyq86gX0i9GIEgUgzoo6DlB4CQFLZ+nEg2MCv8dD4 joshteperman@gmail.com
+
+Your identification has been saved in /Users/josh/.ssh/id_ed25519.
+Your public key has been saved in /Users/josh/.ssh/id_ed25519.pub.
+
+The key's randomart image is:
++--[ED25519 256]--+
+|                 |
+|  .              |
+|oo. o .          |
+|=o.o + o         |
+|=+ ++ E S        |
+|oo*= = * .       |
+|..o+=.ooo+       |
+|  +.+++.* .      |
+| ...o*=+.o.      |
++----[SHA256]-----+
