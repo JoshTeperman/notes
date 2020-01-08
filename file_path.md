@@ -66,6 +66,8 @@ The above example first resolves the parent of `__FILE__`, that is `bin/`, then 
 $LOAD_PATH.unshift(File.expand_path('../../lib/', __FILE__))
 ```
 
+> Rubocop recommends `$LOAD_PATH.unshift(File.expand_path('../lib', __dir__))`
+
 ```ruby
 # Add relative path to /lib to $LOAD_PATH (using dirname):
 
@@ -96,4 +98,42 @@ $:.unshift(File.expand_path(File.dirname(__FILE__))) unless
 ```
 
 
+# `require`, `require_relative`, `require_all`
 
+## `require`
+
+Typically takes a filename as an argument, though can also take an absolute path.
+
+Mostly used for external files.
+
+Relies on the paths in `$LOAD_PATH` if it receives a filename.
+
+## `require_relative`
+
+Will attempt to load files in the same directory, and most commonly used as such.
+
+Useful when loading files that aren't found at paths in `$LOAD_PATH`.
+
+For example:
+
+```ruby
+# clunky
+require(File.expand_path('path_here', File.dirname(__FILE__)))
+
+# clean
+require_relative('path_here')
+```
+
+## `require_all`
+
+Same functionality as `File.dirname(__FILE__)`, allowing you to require the entire directory.
+
+To require all the files in `/lib`:
+
+```ruby
+require(File.dirname('lib'))
+
+# or
+
+require_all 'lib'
+```
