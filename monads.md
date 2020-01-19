@@ -123,7 +123,7 @@ The `dry-monads` gem provides 5 different Monads:
 
 The `Result` type has become very popular in Railway Oriented Programming where you chain steps, or computations together that you expect to fail at some point.
 
-`Result` provides two constructors `Failure(a)` and `Success(b)`.
+`Result` provides two constructors `Failure(x)` and `Success(x)`.
 
 It provides a `bind` method that allows you to compose computations by applying a block the value inside the `Success` monad.
 
@@ -155,5 +155,81 @@ Note that:
 - Thereafter `value` refers to the value contained inside the `Success` Monad, the result of the previous computation.
 - Chaining `.bind do |value|` on the previous `Return` block allows an additional computation using `value`.
 - The block *must* return a `Result` Monad (`Success` or `Failure`)
-- You cannot chain `#bind` on to a `Failure` Result, it doesn't do anything.
+- You cannot chain `#bind` on to a `Failure` Result, it doesn't do anything, therefore you cannot return a `Success` from a `Failure`.
 
+## ROP with Dry-Transaction gem
+
+The Dry-Monads gem can be combined with Dry-Transaction gem to build a DSL that creates ROP business-transactions using the `Result` Monad.
+
+You will need:
+
+- A class with `include Dry::Transaction` and `include Dry::Monads`
+- Methods that return `Result` type `Success` or `Failure`
+- Step adapters from `Dry::Transaction` that chain the mmethods together
+
+```ruby
+class CreateUser
+  include Dry::Transaction
+  include Dry::Monads
+
+  step :validate
+  step :build
+  step :persist
+
+  def validate(user_params, **)
+    if user_params.includes?('name')
+      Sucess(user_params)
+    else
+      Failure("User must have a name")
+    end
+  end
+
+  def build(user_params, company:, **)
+    new_user = User.new(**user_params, company: company)
+    Success(new_user)
+  end
+
+  def persist(new_user, **)
+    if new_user.save
+      Success(new_user)
+    else
+      Failure(new_user: new_user, message: 'Failed to create User')
+    end
+  end
+end
+```
+
+We can now call our new Operation:
+
+```ruby
+CreateUser.new.call(params, organisation: organisation)
+# => Can return either...
+
+# => Success(#<User>)
+# => Failure('User must have a name')
+# => Failure({new_user: new_user, message: 'Failed to create User'})
+```
+
+Note that
+- `step` is a class-level method that takes another method as an argument.
+- validations and conditions must be added as individual steps
+- every step returns a `Result`
+- the `Result` object gets passed from operation to operation as the first argument
+- the `Result` object can become large, so we are extracting specific keys and using `**rest` to pass the rest of the object down
+- this is not the ideal way to perform a database transaction -> see `:around`, or build your own `db_transaction`
+
+### Dry::Transaction Step Adapters
+
+- `step`
+- `map`
+- `tee`
+- `check`
+- `try`
+
+### Dry::Monads Methods
+
+- `bind`
+- `success?`
+- `failure?`
+- `value!`
+- `value_or`
