@@ -20,10 +20,11 @@ All Monads obey these three axioms, written in Haskell:
 - `\x -> ...` is an anonymous function, or block / lambda in ruby `-> (x) { ... }`
 - `f` is a function that accepts a value and returns `Result`
 - `m` is a value of type `Result`
+- `g` appears to refer to another function `f`
 
 ### Left Identity
 
-`return a >>= f` is identical to `f(a)`
+`return(a) >>= f` is identical to `f.(a)`
 
 Say we have a function `f`:
 ```ruby
@@ -47,6 +48,67 @@ f.(5)
 # => Success(25)
 ```
 
+This point gives some insight into how Monads are used in ROP. `f` is a function that returns a `Result` Monad.
+You can call `f` using normal Ruby and it will simply return `Success` and you're done.
+Or, you can pass the argument `x` wrapped in a Monad and bind it to a block, which ... does the same thing, it wrap does some computation on `value` and returns the `Result` wrapped in a `Success` Monad.
+
+If you wanted to, you could take the return `value` of `f` and bind it to another block, and another.
+
+### Right Identity
+
+`m >>= return ≡ m`
+
+If we have a value of type `Result` and we bind it to a `#Success`, the operation won't change anything.
+
+```ruby
+Success(x).bind(&method(:Sucess)) # => Success(x)
+Success(x).bind(&Dry::Monads::Success) # => Success(x)
+Failure(x).bind(&method(:Success)) # => Failure(x)
+```
+
+In other words. An operation is always a `:Success`, until it returns a `:Failure`, and then it is always a `:Failure`.
+
+Hence the idea of Railway Oriented Programming.
+
+There are only two tracks. And if the operation deviates from `:Success` to `:Failure` then the operation will always return `:Failure`.
+
+### Associativity
+
+`(m >>= f) >>= g ≡ m >>= (\x -> f x >>= g)`
+
+Broken down, the following two are the same :
+
+1) `(m >>= f) >>= g` :
+
+A `Result` type value is bound to function `f`, the `Result` of which is bound to function `g`
+
+2) `m >>= (\x -> f x >>= g)`
+
+A `Result` is bound and passed as `x` to an anonymous function, which calls funcction `f` with `x` as an argument, the `Result` of which is bound to funcction `g`.
+
+What this is saying is that you can nest operations any way you like, and the result will always be the same.
+Nesting appears to refer to using additional anonymous functions to receive value and run operations on `Result`.
+
+```ruby
+m = Success(2)
+
+f -> (x) { Success(x ** 2) }
+g -> (x) { x > 50 ? Failure(:number_too_large) : Success(x) }
+
+# (m >>= f) >>= g
+
+(m.bind(&f)).bind(&g)
+# => Success(4)
+
+# m >>= (\x -> f a >>= g)
+
+m.bind do |x|
+  f.(x).bind(&g)
+end
+# => Success(4)
+```
+
+
 
 ## `Dry-Monad` gem Monads
 The `dry-monads` gem provides 5 different Monads:
@@ -58,7 +120,6 @@ The `dry-monads` gem provides 5 different Monads:
 - `Task` - for asynchronous operations
 
 ## `Result`
-
 
 The `Result` type has become very popular in Railway Oriented Programming where you chain steps, or computations together that you expect to fail at some point.
 
