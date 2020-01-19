@@ -218,15 +218,15 @@ Note that
 - the `Result` object can become large, so we are extracting specific keys and using `**rest` to pass the rest of the object down
 - this is not the ideal way to perform a database transaction -> see `:around`, or build your own `db_transaction`
 
-### Dry::Transaction Step Adapters
+### `Dry::Transaction` Step Adapters
 
-- `step`
-- `map`
-- `tee`
-- `check`
-- `try`
+- `step`: Adds operations to your transaction that already return a `Result` object
+- `map`: Any output is considered successful and returned as `Success(output)`
+- `tee`: The operation interacts with some externals system and has no meaningful output. The original input is returned as `Success(input)`
+- `check`: The operation returns a boolean. True values return the original input as Success(input). Any other values return the original input as Failure(input)
+- `try`: The operation may return an exception in an error case. This is caught and returned as Failure(exception). The output is otherwise returned as Success(output)
 
-### Dry::Monads Methods
+### `Dry::Monads` Methods
 
 - `bind`
 - `success?`
