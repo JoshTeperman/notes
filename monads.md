@@ -113,7 +113,7 @@ end
 ## `Dry-Monad` gem Monads
 The `dry-monads` gem provides 5 different Monads:
 
-- `Maybe`- for nil-safe computations, used to represent failure
+- `Maybe`, also known as `Optional` - for nil-safe computations, used to represent failure
 - `Result`, also known as `Either` - for expressing errors using types and result objects.
 - `Try` - to describe computations which may result in an exception
 - `List` - for idiomatic typed lists representing carrying multiple values
@@ -228,8 +228,42 @@ Note that
 
 ### `Dry::Monads` Methods
 
-- `bind`
-- `success?`
-- `failure?`
-- `value!`
-- `value_or`
+- `bind`: Compose multiple possibly failing operations into one
+- `fmap`: Works the same way as `bind`, but will wrap the result in a `Maybe` Monad -> `Some` or `None`
+- `success?`: Will return `true` if `Result` is a `Success`
+- `failure?`: Will return `true` if `Result` is a `Failure`
+- `failure` will unwrap the Monad `value` if `Failure` type
+- `value!`: Will unwrap the the Monad `value` if `Success` type, else raise `Monads::UnwrapError`
+- `value_or`: Returns the Monad `value` on `Success`, or specified value
+
+## Object Theory, the Monoid, and Why Monads are used in FP
+
+FP doesn't like impure functions because they have side-effects (they produce unexpected results).
+
+Monads are Monoids. Monoids are a set with certain properties in Category theory:
+
+- has an identity -> has a () that will return an unchanged result
+- the set has a binary operation that will produce the same type
+- has an associative relationship -> can change the grouping of operations without changing the order and get the same result
+  - eg: numbers under addition (1 + 2) + 3 ≡ 1 + (2 + 3)
+  - eg: numbers unders multiplacation
+  - eg: string concatenation
+  - ... but not numbers under subtraction (1 - 2) - 3 != 1 - (2 - 3)
+
+### The Why -> Functional Programming
+Functional Programming comnbines functions.
+
+Funcional Programming is pure ->
+
+Therefore there needs to be a way for functional programming to handle impure functions. The combination of functions with unexpected results.
+
+How can we combine impure functions and purify the result, so that the it returns a type of itself?
+
+When combining functions so that the result is pure, they must be associative. Functional programming provides the `bind` method which allows the combination of functions without unwrapping the result.
+
+With some functions:
+- 1 => [1] Wrap an input in a List
+- 1 => [2] Add 1 to an input and wrap it in a list
+
+is fine, but if you combine two functions together
+binding -> combining functions so that a binary operation will still always return
