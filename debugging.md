@@ -21,3 +21,15 @@ If so, `rm /usr/local/var/postgres/postmaster.pid`
 And restart the server.
 
 Otherwise, print server log for more detailed error messages: `cat /usr/local/var/postgres/server.log`
+
+
+### When
+Dumping production database
+### Solution
+`--exclude-table="notify_user_notifications" --exclude-table="notify_user_deliveries"`
+
+
+### When
+If your rails is frozen when booting up.
+### Solution
+Quickest way i find to kill it is to press `ctrl-z` to put the app into background, then do this `kill -9 $(jobs -p)`
