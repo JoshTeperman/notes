@@ -286,11 +286,11 @@ Add title slug to existing Blogs:
 
 `Blog.find_each(&:save)`
 
-## Sharing data between pages with Rails Sessions
+## Sharing data between pages with Rails `session`
 
-__Do no secure confidential data in sessions, they are not secure!!!__
+__Do not secure confidential data in a `session`, it is not secure!!!__
 
-`Session` is an object, therefore you can set and retrieve session data as you would from hash.
+`session` is an object, therefore you can set and retrieve session data as you would from hash.
 
 For example, if you could retrieve a referrer id from a query string and use that in your app:
 
@@ -525,6 +525,13 @@ class User
 
 end
 ```
+
+`before_save`<br>
+`before_create`
+
+These two run just before database insert, after validations, and are effectively the same, except that `before_save` will run every time a resource is saved (including on `update`), where `before_create` only runs when a new resource is created.
+
+> `before_save :generate_api_key, :if => :new_record?`
 
 ## Database Relationships
 
@@ -981,7 +988,7 @@ def login_helper
   else
     link_to 'Register', new_user_registration_path
     link_to 'Login', new_user_session_path
-    <% end %>
+  end
 end
 ```
 ### Pass CSS classes into view helper
@@ -1003,7 +1010,7 @@ end
 <%= nav_links_helper('footer-nav') %>
 ```
 ```ruby
-# application_hmtl.erb
+# application_hmtl.erb¸
 
 <%= login_helper %>
 ```
@@ -1079,7 +1086,7 @@ Do not use caching if you need the client to be able to update the page and see 
 # index.html.erb
 
 <%= content_for :not_authorized, 'You are unauthorized' %>
-<%= content_for :page_title { <title>Page Title</title> }
+<%= content_for :page_title { <title>Page Title</title> } %>
 <%= content_for :content_from_block { This is yielded content } %>
 <%= content_for :content_from_hash, 'This is the content' %>
 ```
@@ -1133,6 +1140,25 @@ end
     <% end %>
   </div>
 </div>
+```
+
+## Flash Messages
+
+Flash messages will be visible for one `request`.
+
+`flash[:success] = "Message"`<br>
+`flash[:danger] = "Message"`
+
+When using `render`, the client does not make a request so the flash message will appear for one render longer than you want, so use `flash.now` instead:
+
+`flash.now[:success] = "Message"`
+
+```ruby
+# application.html.erb
+
+<% flash.each do |type, message| %>
+  <%= content_tag(:div, message, class: "alert alert-#{type}") %>
+<% end %>
 ```
 
 # Rake
@@ -1291,7 +1317,41 @@ require('custom')
 ```
 
 # Misc: Coding in Rails
-Use `before_action` to set current model for each controller method from params
+
+`Rails.application.routes.url_helpers.<path_name>`
+
+## `has_secure_password`
+
+Useful built-in rails method that utilizes bcrypt to give password authentication to a model.
+
+Relies on there being a `xxx_digest` attribute, and `bcrypt` being installed.
+
+- User with `password_digest` attribute can be created with `password` and `password_confirmation`
+- `user.password_digest` returns the hashed password
+- password must be present on creation
+- will validate password is not `nil`
+- will validate `xxx_confirmation` attribute if provided
+- gives `user.authenticate('password')` method, which returns either false or the user resource
+
+> Note: `nil` passwords are invalid yet empty passwords will still pass validation without a `validates presence: true`. To create `update` action that doesn't require password input pass `allow_nil: true` to the `validates` method.
+
+### Using the `authenticate` method in controller for user login:
+
+```ruby
+  # sessions_controller.rb
+
+  def create
+    @user = User.find(params[:session][:email])
+    if @user && @user.authenticate(params[:session][:password])
+      redirect_to root_path
+    else
+      flash.now[:danger] = 'Could not authenticate user'
+      render 'new'
+    end
+  end
+```
+
+## Use `before_action` to set current model for each controller method from params
 
 ```ruby
 class BlogsController > ApplicationController
@@ -1553,4 +1613,233 @@ In this case, `self.hello` method is delegated to the associated `:greeter` Obje
   end
 ```
 
+# Security
+
+## SSL
+
+```ruby
+# production.rb
+
+config.force_ssl = true
+```
+
+# Cookies
+
+Cookies is a has that uses a `value` key for the token, and an optional `expires` key.
+
+```ruby
+cookies[:remember_token] = {
+  value: remember_token,
+  expiers: 20.years_from_now.utc
+}
+```
+
+This pattern is so common there is a method which does the same thing:
+
+`cookies.permanent[:remember_token] = remember_token`
+
+Cookies are not encrypted by default and will store plain string data, therefore you can use:
+
+```ruby
+  cookies.permanent.encrypted[:user_id] = user_id
+```
+
+... which can be retrieved with
+
+```ruby
+  User.find_by(cookies.encrypted[:user_id])
+```
+
+Tokens in cookies are often used in conjunction with a hashed token stored in the database, allowing you to extract the `user_id` and `token` from a session user, look up the user in the database, and compare the token against some the one stored in the database and hashed using a secret.
+
+## Cookies with `remember_token`
+
+Using a `remember_digest` and `remember_token` to authenticate users with a session cookie using `BCrypt`
+
+```ruby
+  # sessions_controller.rb
+
+  # Uses has_secure_password #authenticate method to compare password submitted in the form to the User password_digest
+
+  def create
+    user = User.find params[:session][:email]
+    if user && user.authenticate(params[:session][:password])
+      login_user
+      remember user
+      redirect_to user
+    end
+  end
+```
+
+```ruby
+  # sessions_helper
+
+  # Creates user_id and remember_token cookies that are used for remembering users between sessions
+  # Current_user sets user to user in session object, else if the user has been 'remembered' and has a user_id cookie, confirms the user is authenticated with a remember_token cookie that is equal to the hashed remember_digest
+
+  def login_user
+    session[:user_id] = user_id
+  end
+
+  def remember(user)
+    user.remember
+    cookies.permanent.encrypted[:user_id] = user.id
+    cookies.encrypted[:remember_token] = user.remember_token
+  end
+
+  def current_user
+    if (user_id = session[:user_id])
+      @current_user ||= User.find_by(id: user_id)
+    elsif (user_id = cookies.encrypted[:user_id])
+      user = User.find_by(id: user_id)
+      if user && user.authenticated?(cookies[:remember_token])
+        @current_user = user
+      end
+    end
+  end
+```
+
+```ruby
+  # User.rb (remember_digest: string, email: string)
+
+  # Creates remember_token when users log in
+  # Utility method for creating hashed string digest for passwords and tokens
+  # Authenticate remember_token cookies by comparing them to hashed remember_digest
+
+  def remember
+    self.remember_token = User.new_token
+    update_attribute(:remember_digest, remember_token)
+  end
+
+  def authenticated?(remember_token)
+    return false if remember_digest.nil?
+    BCrypt::Password.new(remember_digest).is_password?(remember_token)
+  end
+
+  class << self
+    def digest(string)
+      cost = ActiveModel::SecurePassword.min_cost ? BCrypt::Engine::MIN_COST : BCrypt::Engine.cost
+      BCrypt::Password.create(string, cost: cost)
+    end
+
+    def new_token
+      SecureRandom.urlsafe_base64
+    end
+  end
+```
+
+# Bootstrap
+
+## Rails 6
+`yarn add jquery@3.4.1 bootstrap@3.4.1`
+
+```javascript
+  // environment.js
+
+  const { environment } = require('@rails/webpacker')
+
+  const webpack = require('webpack')
+  environment.plugins.prepend('Provide',
+    new webpack.ProvidePlugin({
+      $: 'jquery/src/jquery',
+      jQuery: 'jquery/src/jquery',
+    })
+  )
+
+  module.exports = environment
+```
+
+```javascript
+  // application.js
+
+  require ("jquery")
+  import "bootstrap"
+```
+
+
+# Mailers
+
+### Generators
+
+```ruby
+  `rails generate mailer UserMailer account_activation password_reset`
+
+  create    app/mailers/user_mailer.rb
+  create    app/views/user_mailer/account_activation.text.erb
+  create    app/views/user_mailer/account_activation.html.erb
+  create    app/views/user_mailer/password_reset.text.erb
+  create    app/views/user_mailer/password_reset.html.erb
+```
+
+```ruby
+  # application_mailer.rb
+
+  class ApplicationMailer < ApplicationMailer::Base
+    default from: 'no-reply@example.com'
+    layout 'mailer'
+  end
+```
+
+```ruby
+  # user_mailer.rb
+  class UserMailer < ApplicationMailer
+    def account_activation(user)
+      @user = user
+      mail(to: 'someone@email.com', subject: 'Email Subject' )
+    end
+
+    def password_reset
+    end
+  end
+```
+
+### Sending Mail
+
+```ruby
+  # users_controller
+
+  def create
+    if @user.save
+      UserMailer.account_activation(user: user).deliver_later
+      flash[:info] = 'Please check your inbox for an activation email to completed registration.'
+      redirect_to root_path
+    else
+      # handle failure
+    end
+  end
+```
+
+You won't receive an email in development, but you should see the email being sent in your server logs:
+
+```
+UserMailer#account_activation: processed outbound mail in 2.6ms
+Delivered mail 5ebf88d55974e_11f963ff55b634cec280db@Admins-MBP-2.mail (5.8ms)
+```
+
+### Mailer Previews
+
+```ruby
+  # development.rb
+  host = 'localhost:3000'
+  config.action_mailer.default_url_options = { host: host, protocol: 'http' }
+```
+
+```ruby
+# Preview all emails at http://localhost:3000/rails/mailers/user_mailer
+  class UserMailerPreview < ActionMailer::Preview
+    def account_activation
+      user = User.first
+      UserMailer.account_activation(user)
+    end
+  end
+```
+
+### Testing
+
+```ruby
+  # test.rb
+  host = 'example.com'
+  config.action_mailer.delivery_method = :test
+  config.action_mailer.default_url_options = { host: host }
+```
 
