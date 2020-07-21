@@ -73,3 +73,50 @@ image = MiniMagick::Image.new("input.jpg") do |b|
 end
 # the command gets executed
 ```
+
+# Active Storage with AWS S3
+
+Install the gem:
+
+`  gem 'aws-sdk-s3', '~> 1.74', require: false`
+
+1. Sign up for AWS
+2. Create a user in IAM with 'programmatic access' and give them Administrator Access (attach existing policies directly)
+3. After creating the user store the Access Key ID Secret Access Key in LastPass
+4. Create a bucket with a unique name
+
+In `production.rb` configure `active_storage` to use Amazon:
+
+`config.active_storage.service = :amazon`
+
+Store the `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, and `AWS_BUCKET` keys in Rails credentials (or Heroku Config vars).
+
+Configure the amazon connection in `storage.yml` to use the keys:
+
+```ruby
+# with Rails credentials
+
+amazon:
+  service: S3
+  access_key_id: <%= Rails.application.credentials.dig(:aws, :access_key_id) %>
+  secret_access_key: <%= Rails.application.credentials.dig(:aws, :secret_access_key) %>
+  region: us-east-1
+  bucket: your_own_bucket
+```
+
+```ruby
+# with Heroku
+
+amazon:
+  service: S3
+  access_key_id: <%= ENV['AWS_ACCESS_KEY_ID'] %>
+  secret_access_key: <%= ENV['AWS_SECRET_ACCESS_KEY'] %>
+  region: <%= ENV['AWS_REGION'] %>
+  bucket: <%= ENV['AWS_BUCKET'] %>
+
+# don't forget to reset Heroku database
+
+heroku pg:reset database
+heroku run rails db:migrate
+heroku run rails db:seed
+```
