@@ -348,7 +348,7 @@ Active Record Objects can be created by extending the `ApplicationRecord` class:
 
 This will create a `myObject` model, mapped to a `my_objects` table in the database. ActiveRecord will then allow you to map the columns for each row in that table to the attributes of instances of `myObject`.
 
-Active Record Objects don't specify their attributes directly, but rather infer them from the table definition with which they're linked. Modifying attributes and object types is done directly on the database, after which the mapping that binds the myObject class to its database table will update all related Active Record Objects automatically.
+Active Record Objects don't specify their attributes directly, but rather infer them from the table definition with which they're linked. Modifying attributes and object types is done directly on the database, after which the mapping that binds the `myObject` class to its database table will update all related Active Record Objects automatically.
 
 ### `ActiveRecord::Base` & `ApplicationRecord`
 
@@ -360,7 +360,7 @@ Customised code added to `ApplicationRecord` will be localized to Models inherit
 
 https://www.freecodecamp.org/news/single-table-inheritance-vs-polymorphic-associations-in-rails-af3a07a204f2/
 
-Where many subclasses inherit from a single superclass, and all of the data is stored in a single table. Different subclasses are defined by a `type` column on the superclass.
+Where many subclasses inherit from a single superclass, and all attributes from all levels of the hierarchy are represented in a single table. Different subclasses are defined by a `type` column on the superclass.
 
 It is important to create the `type` column, as this tells Active Record that we want to use STI.
 
@@ -373,6 +373,8 @@ Cons:
 - Can't add uniqe attributes to subclasses. The only way is to add them to the super class and have `nil` fields on other classes which makes validation difficult.
 - Without filtering, searching can lead to performance issues, as searching for one subclass requires a search for all superclass rows.
 - Nothing stopping the wrong data being added to the wrong subclass.
+
+We can say that STI is basically a way to map an inheritance hierarchy for a bunch of classes that have a lot of common state not behavior.
 
 => Consider using polymorphic associations if two subclasses need to have their own separate database tables.
 
@@ -452,6 +454,76 @@ Note, `<class>able` is a Rails convention. You can name the polymorphic associat
 An abstract class is a class that is not persistent, ie: it does not have a table in the database.
 Using an abstract class implies that it's data is not persistent and that its purpose is to share functionality with with subclasses via inheritance.
 
+The problem with purely abstract classes is that all concrete subclasses must persist all the shared
+attributes themselves in their own tables (also known as class-table inheritance). This makes it hard to
+do queries across the hierarchy. For example, imagine you have the following hierarchy:
+
+```ruby
+  class Entry < ApplicationRecord; end
+  class Message < Entry; end
+  class Comment < Entry; end
+```
+
+How do you show a feed that has both +Message+ and +Comment+ records, which can be easily paginated?
+Well, you can't! Messages are backed by a messages table and comments by a comments table. You can't
+pull from both tables at once and use a consistent OFFSET/LIMIT scheme.
+
+You can get around the pagination problem by using single-table inheritance, but now you're forced into
+a single mega table with all the attributes from all subclasses. No matter how divergent. If a Message
+has a subject, but the comment does not, well, now the the comment does! So STI works best when there's
+little divergence between the subclasses.
+
+If this were polymorphic:
+
+```ruby
+  class Entry; belongs_to :entryable, polymorphic: true; end
+  class Message; has_many :entries, as: :entryable; end
+  class Comment; has_many :entries, as: :entryable; end
+```
+
+### Delegated types
+
+While abstract classes can be used to create subclasses that inherit from that class but have their own distint tables with persisted attributes; and Single Table Inheritance can be used to create classes that are all persisted to a single mega-table; there is a third option.
+
+Delegated types use a superclass that is a concrete, database-backed class (unlike with abstract classes), where all attributes shared by subclasses are persisted to the superclass table, and all subclasses can persist their own specialized attributes particular to their implementation to their own tables (unlike STI).
+
+```ruby
+  # schema [:id, :account_id, :creator_id, timestamps, :entryable_type, :entryable_id]
+  class Entry
+    belongs_to :account
+    belongs_to :creator
+    delegated_type :entryable, types: %w[Message Comment]
+  end
+
+  module Entryable
+    extend ActiveSupport::Concern
+
+    included do
+      has_one :entry, as: :entryable, touch: true
+    end
+  end
+
+  # schema [:id, subject]
+  class Message
+    include Entryable
+  end
+
+  # schema [:id, :content]
+  class Comment
+    include Entryable
+  end
+```
+
+This setup allows us to store crucial metadata in the superclass `Entry`, and neither `Message` nor `Comment` are meant to stand alone.
+Additionally, due to the `has_one :entry` association on both `Message` and `Comment`, `Entry` can now stand alone in terms of querying capacity for any data you might need.
+
+We now how have the flexibility to query both:
+```ruby
+  Account.entires.order(created_at: :desc).limit(50)
+  entry.comment.content
+  entry.creator.name
+  entry.entryable_name
+```
 
 ### Creating Active Record Objects
 
