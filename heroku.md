@@ -1,3 +1,5 @@
+## Commands
+
 `heroku login --interactive`
 `heroku create`
 `git push heroku master`
@@ -11,4 +13,16 @@ heroku maintenance:on
 git push heroku
 heroku run rails db:migrate
 heroku maintenance:off
+```
+
+## Reset the database
+
+Note: `user` has no privileges when running rake tasks on a Heroku dyno, so `rake db:reset` will return a `FATAL: permission denied` error.
+
+https://devcenter.heroku.com/articles/rake
+
+```
+heroku pg:reset DATABASE --confirm <app_name>
+heroku run rails db:migrate
+heroku run rails db:seed
 ```
