@@ -11,7 +11,7 @@
 `unset variable_name` : remove environment variable\
 `echo $variable_name` : view value of env variable\
 `alias name="script"` : create new bash alias\
-`unalias name` : remove alias\ 
+`unalias name` : remove alias\
 `sort` : sort the lines of a file our input alphabetically
 `chmod +xrw file_name` : add executable, readable, writeable permissions to a file\
 `chmod 777 file_name` : same as above\
@@ -21,6 +21,8 @@
 `users` : view all users currently logged in
 `cat etc/passwd` : list of all users
 `cat etc/group` : list of all groups
+`$?` : return the code of the last executed command (0 means success)
+`$$` : return the PID of the current process
 
 ### xargs
 `input | xargs <command>` : will loop over multiple arguments in input and run a command on each.\
@@ -52,7 +54,7 @@ printf $lv | xargs -I % sh -c 'cd %; pwd %'
 => /Users/josh/Documents
 => /Users/josh
 
-NOTES: 
+NOTES:
 # export the three arguments as alias "lv"
 # "-I %" replace occurences of each argument with names read from input (stdin?)
 # "sh" command interpreter (bash / shell)
@@ -75,10 +77,10 @@ bash loops: http://tldp.org/HOWTO/Bash-Prog-Intro-HOWTO-7.html
 __loop and print 3 times__\
 `"for i in {1..3}; do echo Welcome \$i times; done"` \
 __quotation marks and '$' must be escaped if you want to use them:__\
-`"for i in {1..3}; do echo \"Welcome \$i times\"; done"` 
+`"for i in {1..3}; do echo \"Welcome \$i times\"; done"`
 
 ```
-declare -a names=("josh" "kate" "aaron")    
+declare -a names=("josh" "kate" "aaron")
 
 for i in "${names[@]}"
 do
@@ -94,7 +96,7 @@ __once again to echo this command into a bash file you'll have to escape all the
 ```
 declare -a names=(\"josh\" \"kate\" \"aaron\" \"noah\")
 for i in \"\${names[@]}\"
-do 
+do
   echo \"\$i\"`
 done
 ```

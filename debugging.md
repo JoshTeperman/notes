@@ -1,3 +1,21 @@
+#### Search and kill by PID
+`ps -ax | grep <pid_name>`\
+`kill -9 <pid>`
+
+#### View postgres logs
+`tail /usr/local/var/log/postgres.log`
+
+#### Nuke and restart postgres
+`rm -rf /usr/local/var/postgres`<br>
+`initdb /usr/local/var/postgres -E utf8`
+`brew services restart postgresql`
+`bundle exec rails db:create db:migrate db:seed`
+
+
+#### List all user accounts in the terminal
+`dscacheutil -q user | grep -A 3 -B 2 -e uid:\ 5'[0-9][0-9]'`
+
+
 ### When
 Running rails server
 ### Error
