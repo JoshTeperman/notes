@@ -1,28 +1,31 @@
-`date` : print the date\
-`cal` : show a calendar\
 `!!` : previous command eg: `sudo !!` (run previous command as super user)\
-`top` : display Linux tasks (view detailed list of processes running on this computer)\
-`ps` : view all user's currently running jobs\
-`kill -9 <PID>` : kill process with PID\
-`mkdir -p path/multiple/folders` : will create multiple directories even if they don't exist\
-`printenv` : view list of environment variables\
-`variable_name=value` : create new environment variable\
-`export variable_name=value` : create new environment variable and make it available to sub-processes (commands called from this shell)\
-`unset variable_name` : remove environment variable\
-`echo $variable_name` : view value of env variable\
+`$?` : return the code of the last executed command (0 means success)\
+`$$` : return the PID of the current process\
 `alias name="script"` : create new bash alias\
-`unalias name` : remove alias\
-`sort` : sort the lines of a file our input alphabetically
-`chmod +xrw file_name` : add executable, readable, writeable permissions to a file\
-`chmod 777 file_name` : same as above\
+`cal` : show a calendar\
+`cat etc/group` : list of all groups\
+`cat etc/passwd` : list of all users\
 `chmod -rxw file_name` : remove all permissions from a file\
+`chmod +xrw file_name` : add executable, readable, writeable permissions to a file\
 `chmod 000 file_name` : same as above\
+`chmod 777 file_name` : same as above\
 `chmown owner file_name` : change owner of file\
-`users` : view all users currently logged in
-`cat etc/passwd` : list of all users
-`cat etc/group` : list of all groups
-`$?` : return the code of the last executed command (0 means success)
-`$$` : return the PID of the current process
+`date` : print the date\
+`echo $variable_name` : view value of env variable\
+`export variable_name=value` : create new environment variable and make it available to sub-processes (commands called from this shell)\
+`groups` : display users groups
+`kill -9 <PID>` : kill process with PID\
+`man <command> [-k]` : manual for command [perform search on manual]\
+`mkdir [-p] path/multiple/folders` : create directory [incl parent directories]\
+`printenv` : view list of environment variables\
+`ps` : view all user's currently running jobs\
+`sort` : sort the lines of a file our input alphabetically
+`top` : display Linux tasks (view detailed list of processes running on this computer)\
+`unalias name` : remove alias\
+`unset variable_name` : remove environment variable\
+`users` : view all users currently logged in\
+`variable_name=value` : create new environment variable\
+`which <command>` : prints the location of the command, eg `which cat` -> `/bin/cat`
 
 ### xargs
 `input | xargs <command>` : will loop over multiple arguments in input and run a command on each.\
