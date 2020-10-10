@@ -5,23 +5,33 @@
 `cal` : show a calendar\
 `cat etc/group` : list of all groups\
 `cat etc/passwd` : list of all users\
-`chmod -rxw file_name` : remove all permissions from a file\
+`chmod -rxw file_name` : "change mode command" -> remove all permissions from a file\
 `chmod +xrw file_name` : add executable, readable, writeable permissions to a file\
+`chmod a=r, u+w file+name` : add read permission to all (user, group, other), write permission to user\
 `chmod 000 file_name` : same as above\
 `chmod 777 file_name` : same as above\
 `chmown owner file_name` : change owner of file\
 `date` : print the date\
 `echo $variable_name` : view value of env variable\
 `export variable_name=value` : create new environment variable and make it available to sub-processes (commands called from this shell)\
-`groups` : display users groups
+`file` : file command, prints file path and file type\
+`find [-name, -type -mtime days, -size num, -newer file, exec command {} \;]` : find files that are [name, type, x days old, newer than x file, execute command against found files]\
+`find . -mtime +10 -mtime -13` : find files that are between 10 and 13 days old\
+`find . -name s* -ls` : find anything beginning with `s` and perform an `ls` on it\
+`find . -size +1M` : find file larger than 1MB or greater\
+`find . type -type d -newer file.txt` : find all directories that are newer than `file.txt`\
+`groups` : display users groups\
 `kill -9 <PID>` : kill process with PID\
+`locate <pattern>` : fast find, indexed as opposed to `find` which evaluates every file. Results may not include recent files\
 `man <command> [-k]` : manual for command [perform search on manual]\
 `mkdir [-p] path/multiple/folders` : create directory [incl parent directories]\
 `printenv` : view list of environment variables\
 `ps` : view all user's currently running jobs\
-`sort` : sort the lines of a file our input alphabetically
+`sort [-u, -r]` : sort the lines of a file our input alphabetically [-u: unique, -r: in reverse order]\
+`tail [-n, -f]` : print the last `n` lines of a file (default 10 lines). Opposite of `head`. [-f: follow changes in the file]\
 `top` : display Linux tasks (view detailed list of processes running on this computer)\
 `unalias name` : remove alias\
+`umask` : specify/remove file permissions (opposite of `chmod`) when files are created in a directory\
 `unset variable_name` : remove environment variable\
 `users` : view all users currently logged in\
 `variable_name=value` : create new environment variable\
@@ -104,14 +114,57 @@ do
 done
 ```
 
-### Redirectin Input and Output
+### Redirecting Input and Output
+
+| I/O Name | Abbreviation | File Descriptor | Description
+|---|---|---|---|
+Standard Input | stdin | 0 | Comes from the keyboard
+Standard Output | stdout | 1 | Displayed to the screen
+Standard Error | stderr | 2 | Displayed to the screen
+
 
 `"|"` : the pipe operator redirects the output (stdout) of the first stream to the input (stdin) stream of the second command\
-`">"` : redirects the output of the first stream to a different location\
-`"<"` : gets input from particular location (rather than the default stdin) __note__ this causes the data to 'flow' right to left on the command line, eg: `sort <(echo "1\n3\n2")`\
-`"string" >&0` : redirect "string" to stdin\
-`"string" >&1` : redirect "string" to stdout\
-`"string" >&2` : redirect "string" to sterror
+`">"` : Redirects standard output (to a file). Redirects the output of the first stream to a different location. Overwrites (truncates) existing file contents.\
+`">>"` : Redirects standard output (to a file). Appends to any existing content.\
+`"<"` : Redirect standard input (from a file/keyboard) to a command. Gets input from particular location (rather than the default `stdin`) __note__ this causes the data to 'flow' right to left on the command line, eg: `sort < (echo "1\n3\n2")`.\
+`"string" > &0` : redirect "string" to `stdin`\
+`"string" > &1` : redirect "string" to `stdout`\
+`"string" > &2` : redirect "string" to `stderr`\
+`ls -l > files.txt` : redirect list of files & directories to `files.txt`\
+`sort < sort.txt > sorted-files.txt` : redirect the contents of `sort.txt` into `sort` command, and redirect that to `sorted-files.txt`\
+`2>&file` : redirect `stderr` to a file\
+`2>&1` : Combine `stderr` and `stdout`\
+`>/dev/null` : ignore `stdout` (send it do the null device or bitbucket -> special file that discards anything fed to it)
+
+File descriptor `&2` is assumed for input redirection, and file descriptor `&1` is assumed for output redirection. Therefore these are the same:
+
+`ls -l > files.txt`\
+`ls -l 1> files.txt`
+
+Because `&1` is the default descriptor for `stdout`, not all output is necessarily captured by default.
+
+Sometimes it is useful to redirect `stdout` and `stderr` to different files (for an error log):
+```
+$ ls files.txt doesnt-exist.txt 1>out 2>out.err
+$ cat out
+=> files.txt
+$ cat out.err
+=> ls: cannot access doesnt-exist.txt: No such file or directory
+```
+
+Combine both:
+```
+$ ls files.txt doesnt-exist.txt >out.both 2>&1
+$ cat out.both
+=> ls: cannot access doesnt-exist.txt: No such file or directory
+=> files.txt
+```
+
+Send errors to the null device:
+```
+$ ls files.txt doesnt-exist.txt 2>/dev/null
+=> files.txt
+```
 
 ### Grep
 
