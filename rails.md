@@ -487,6 +487,12 @@ While abstract classes can be used to create subclasses that inherit from that c
 
 Delegated types use a superclass that is a concrete, database-backed class (unlike with abstract classes), where all attributes shared by subclasses are persisted to the superclass table, and all subclasses can persist their own specialized attributes particular to their implementation to their own tables (unlike STI).
 
+```
+class JobAdderAction
+  delegated_type :job_adder_actionable, types: %w[Candidate]
+end
+```
+
 ```ruby
   # schema [:id, :account_id, :creator_id, timestamps, :entryable_type, :entryable_id]
   class Entry
